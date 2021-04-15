@@ -9,7 +9,7 @@
     *   The group met to write the requirements document
     *   Our group zoom meetings were fairly productive and we were able to get ideas from multiple people when defining the requirements and thinking about some of the early design decisions that we are going to have to make
     *   We learned that we did not have as much time as we thought when we were creating a rough schedule for our project and had to move some of our main features to stretch features in order to accommodate this
-    *   We have not had too much trouble with these early tasks especially since we haven’t been faced with any implementation roadblocks, but within this next week our research may reveal problems that we have to solve in our design before we go ahead with the implementation \
+    *   We have not had too much trouble with these early tasks especially since we haven’t been faced with any implementation roadblocks, but within this next week our research may reveal problems that we have to solve in our design before we go ahead with the implementation
 
 *   Plans and goals for the following week:
     *   Research tools/frameworks necessary for implementation: (1 week)
