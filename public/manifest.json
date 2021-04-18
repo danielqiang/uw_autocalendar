@@ -13,10 +13,10 @@
   },
 
   "background": {
-    "scripts": ["./background.js"]
+    "scripts": ["./javascript/background.js"]
   },
 
-  "options_page": "./options.html",
+  "options_page": "./HTML/options.html",
 
   "browser_action": {
     "default_icon": {
@@ -25,7 +25,7 @@
       "48": "./images/extensionIcons/extension-icon-48.png",
       "128": "./images/extensionIcons/extension-icon-128.png"
     },
-    "default_popup": "popup.html"
+    "default_popup": "./HTML/popup.html"
   },
 
   "permissions": [
