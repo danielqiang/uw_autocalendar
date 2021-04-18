@@ -1,0 +1,12 @@
+{
+  "name": "test",
+  "version": "0.1.0",
+  "manifest_version": 2,
+  "background": {
+    "scripts": ["public/background.js"]
+  },
+  "browser_action": {
+    "default_popup": "public/testing_index.html"
+  },
+  "content_security_policy": "script-src 'self' https://apis.google.com; object-src 'self' 'sha256-ONw3KetUA7QhrSeH6GzyziPGsqJm2mjC7TEg/uKcxXQ=' 'sha256-c9YRlEpUBiYsK7v3qDhOIZD7AerRTFp0HSaXVGfvwWI='"
+}
