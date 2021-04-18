@@ -1,0 +1,36 @@
+{
+  "manifest_version": 2,
+
+  "name": "UW Autocalendar",
+  "description": "This extension will integrate UW calendar with Google calendar",
+  "version": "1.0",
+
+  "icons": {
+    "16": "./images/extensionIcons/extension-icon-16.png",
+    "32": "./images/extensionIcons/extension-icon-32.png",
+    "48": "./images/extensionIcons/extension-icon-48.png",
+    "128": "./images/extensionIcons/extension-icon-128.png"
+  },
+
+  "background": {
+    "scripts": ["./background.js"]
+  },
+
+  "options_page": "./options.html",
+
+  "browser_action": {
+    "default_icon": {
+      "16": "./images/extensionIcons/extension-icon-16.png",
+      "32": "./images/extensionIcons/extension-icon-32.png",
+      "48": "./images/extensionIcons/extension-icon-48.png",
+      "128": "./images/extensionIcons/extension-icon-128.png"
+    },
+    "default_popup": "popup.html"
+  },
+
+  "permissions": [
+    "tabs",
+    "https://calendar.google.com/*",
+    "storage"
+  ]
+}
