@@ -13,7 +13,7 @@
   },
 
   "background": {
-    "scripts": ["./javascript/background.js"]
+    "scripts": ["./background.js"]
   },
 
   "options_page": "./HTML/options.html",
