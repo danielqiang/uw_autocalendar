@@ -86,24 +86,28 @@ body {
 #next-steps {
     font-size: large;
     font-weight: bold;
-    margin: 5% 5% 7% 5%;
+    margin: 5% 5% 5% 5%;
 }
 
 .step {
     font-size: medium;
     font-weight: normal;
 }
-
-#redirect-button {
+.flex-container {
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-#to-Google-calendar {
+.flex-container > div {
+    padding: 0 10px 0 10px;
+    font-size: 30px;
+}
+
+.functional-button {
     position: relative;
     text-align: center;
-    font-size: medium;
+    font-size: 13px;
     color: white;
     background: rgba(96,50,159, 0.8);
     border: none;
