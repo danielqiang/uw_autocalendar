@@ -1,8 +1,8 @@
 **Team Report**
 
 *   Copy of the third section from last week:
-        *   Research tools/frameworks necessary for implementation: (1 week)
-       *   Team: (3 days)
+    *   Research tools/frameworks necessary for implementation: (1 week)
+        *   Team: (3 days)
             *   OAuth 2.0 flow for Google Calendar
             *   Chrome extension setup
             *   Javascript familiarization
@@ -10,12 +10,14 @@
             *   Using the Canvas API via user credentials instead of API key
         *   Laksh, Daniel: (3 days)
             *   Gradescope authentication and API
+    
 
 *   Progress and issues: 
     *  Got some Canvas API calls to work and found that Canvas returns .ics files which may be convenient for importing into Google Calendar
     *  Did not find how to authenticate with Canvas yet
     *  Got OAuth implicit grant flow prototype working with JavaScript for Google Calendar, in addition to registering Google Calendar API key/client ID
-   *   Set up Google extension with pop-up window designed
+    *   Set up Google extension with pop-up window designed
+
 
 *   Plans and goals for the following week:
     *   Have a basic project architecture ready (2 days)
@@ -30,7 +32,6 @@
 **Contributions of individual team members.**
 
 *   Copy of the third section from last week:
-
     *   Xiaoyue Sun:
         *   Research on OAuth 2.0 workflow for Google Calendar (2 days)
         *   Check Chrome extension setup (1-2 days)
@@ -57,11 +58,11 @@
         *   Figure out how to create a wireframe Chrome add-on using JavaScript (2-3 days)
         *   Discuss with Laksh/the rest of the team on how best to approach working with the Google Calendar API and integrating everything with Canvas/other data sources. (1 week)
     
-*   Progress and issues:
 
+*   Progress and issues:
     *   Xiaoyue Sun
     
-        *  Figuring out the general architecture of a directory which packed up the extension, I created one for UW Autocalendar. There were three fundamental pieces in the directory for our use case: manifest.json (specifying properties/permissions of the extension), popup.html (showed up when clicking the extension in toolbar), and background.js (automatically executed when the extension has been added to Chrome). To spin up the extension, I specified some basic properties and designed the popup UI for it. In the whole setup, the trickiest part was adjusting the layout of elements on popup. My HTML/CSS skills were very limited, so I had to keep searching solutions and adjusting CSS properties until it looked good, which was tedious and time consuming. Also, since the popup size was pre-determined and fixed, I hardcoded the position of each element. If any layout problems occur in the future, I will make modifications correspondingly.
+        * Figuring out the general architecture of a directory which packed up the extension, I created one for UW Autocalendar. There were three fundamental pieces in the directory for our use case: manifest.json (specifying properties/permissions of the extension), popup.html (showed up when clicking the extension in toolbar), and background.js (automatically executed when the extension has been added to Chrome). To spin up the extension, I specified some basic properties and designed the popup UI for it. In the whole setup, the trickiest part was adjusting the layout of elements on popup. My HTML/CSS skills were very limited, so I had to keep searching solutions and adjusting CSS properties until it looked good, which was tedious and time consuming. Also, since the popup size was pre-determined and fixed, I hardcoded the position of each element. If any layout problems occur in the future, I will make modifications correspondingly.
 
     *   Ariel Shurygin
     
@@ -78,6 +79,7 @@
     *   Daniel Qiang 
         
         * I met with Laksh this week to work on setting up the boilerplate/manifest config for a Google Chrome add-on and getting an OAuth implicit grant flow for the Google Calendar API working from a JavaScript entrypoint. We were able to pull events from individual calendars based on Calendar ID and were working on integrating the OAuth flow with the Chrome extension. My main difficulties this week involved trying to get the OAuth flow working asynchronously so it works with a JavaScript promise/resolution framework. 
+
 
 *   Plans and goals for the following week:
     *   Xiaoyue Sun:
@@ -97,7 +99,7 @@
     *   Laksh Gupta
         *   Understand the OAuth Authentication process for google services and figure out the best way to authenticate the user. (2-3 days)
         *   Work with Xiaoyue and Daniel and get the front end chrome extension hooked in with the google calendar API.
-    
+
     *   Daniel Qiang
         *   Create working prototype for OAuth flow execution from Google Chrome extension (either asynchronously or synchronously) (2-3 days)
-        * Work with Xiaoyue on setting up initial debugging interface for Google Chrome extension
+        *   Work with Xiaoyue on setting up initial debugging interface for Google Chrome extension
