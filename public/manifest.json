@@ -16,6 +16,11 @@
     "scripts": ["./background.js"]
   },
 
+  "oauth2": {
+    "client_id": "770480046288-svksh1osjt501m3l4u27ghp54pacj6vg.apps.googleusercontent.com",
+    "scopes":["https://www.googleapis.com/auth/calendar"]
+  },
+
   "content_security_policy": "script-src 'self' https://apis.google.com/js/platform.js ; object-src 'self'",
 
   "options_page": "./HTML/options.html",
