@@ -1,19 +1,27 @@
-let active_tab_id = 0;
+function login() {
+    let authUrl = "https://accounts.google.com/o/oauth2/auth"
+        + '?response_type=token&client_id=' + "770480046288-4olsqcejcdttk1gug1si4i3q3prfl2sb"
+        + '&scope=' + "https://www.googleapis.com/auth/calendar"
+        + '&redirect_uri=' + chrome.identity.getRedirectURL("oauth2");
 
-chrome.tabs.onActivated.addListener(tab => {
-    chrome.tabs.get(tab.tabId, current_tab_info => {
-        active_tab_id = tab.tabId
-        if (/^https:\/\/calendar\.google/.test(current_tab_info.url)) {
-            chrome.tabs.executeScript(null, {file: './foreground.js'}, () => console.log("Injected foreground.js"));
+    console.log(`redirect uri: ${chrome.identity.getRedirectURL("oauth2")}`)
+
+    chrome.identity.launchWebAuthFlow({'url': authUrl, 'interactive': true}, function (redirectUrl) {
+        if (redirectUrl) {
+            console.log(redirectUrl)
+            // let parsed = parse(redirectUrl.substr(chrome.identity.getRedirectURL("oauth2").length + 1));
+            // token = parsed.access_token;
+            // return callback(redirectUrl); // call the original callback now that we've intercepted what we needed
+        } else {
+            return null;
         }
     });
-});
+}
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.message === "check check") {
-        chrome.tabs.sendMessage(active_tab_id, {message: "received message"});
-        chrome.storage.local.get("password", value => {
-            console.log(value);
-        })
-    }
-});
+document.getElementById("test-OAuth").addEventListener("click", function() {
+    chrome.tabs.create({url: 'index.html'});
+})
+
+// addListener(function() {
+//     chrome.tabs.create({url: 'index.html'});
+// });
