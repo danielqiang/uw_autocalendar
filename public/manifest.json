@@ -21,7 +21,7 @@
     "scopes":["https://www.googleapis.com/auth/calendar"]
   },
 
-  "content_security_policy": "script-src 'self' https://apis.google.com/js/platform.js ; object-src 'self'",
+  "content_security_policy": "script-src 'self' https://apis.google.com/ ; object-src 'self'",
 
   "options_page": "./HTML/options.html",
 
@@ -36,6 +36,7 @@
   },
 
   "permissions": [
-    "identity"
+    "identity",
+    "https://www.google.com/*"
   ]
 }
