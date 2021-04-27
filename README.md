@@ -4,4 +4,4 @@
 
 ## Repo Layout
 
-Our main source code will be in the [src](src/) directory. The [public](public/) directory will (probably) contain boilerplate necessary for hooking our JavaScript source into Chrome as an add-on. 
+Our main source code will be in the [src](src/) directory. The [extension](extension/) directory will (probably) contain boilerplate necessary for hooking our JavaScript source into Chrome as an add-on. 
