@@ -36,3 +36,7 @@ document.getElementById("test-download-events").addEventListener("click", functi
         }
     )
 })
+
+document.getElementById("test-Canvas").addEventListener("click", function () {
+    console.log("Hello World!");
+})

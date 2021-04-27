@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
 
-  "name": "UW Autocalendar",
+  "name": "UW AutoCalendar",
   "description": "This extension will integrate UW calendar with Google calendar",
   "version": "1.0",
 
