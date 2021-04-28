@@ -1,42 +1,15 @@
-function getToken(callback) {
-    chrome.identity.getAuthToken({
-        interactive: true
-    }, callback);
-}
+import {GoogleCalendar} from "./google_calendar.js";
 
-function revokeToken() {
-    getToken(function (token) {
-        chrome.identity.removeCachedAuthToken({
-            token: token
-        })
-    })
-}
+const calendar = new GoogleCalendar();
 
-document.getElementById("test-OAuth").addEventListener("click", function () {
-    getToken(function (token) {
-        console.log(token);
-    });
+document.getElementById("test-OAuth").addEventListener("click", async function() {
+    console.log(await calendar.oauth_token());
 })
 
-document.getElementById("test-download-events").addEventListener("click", function () {
-    getToken(
-        function(token) {
-            const headers = new Headers({
-                'Authorization' : 'Bearer ' + token,
-                'Content-Type': 'application/json'
-            })
-
-            const queryParams = { headers };
-
-            fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', queryParams)
-                .then((response) => response.json()) // Transform the data into json
-                .then(function(data) {
-                    console.log(data);
-                })
-        }
-    )
+document.getElementById("test-download-events").addEventListener("click", async function() {
+    console.log(await calendar.download_events())
 })
 
-document.getElementById("test-Canvas").addEventListener("click", function () {
-    console.log("Hello World!");
+document.getElementById("test-Canvas").addEventListener("click", async function() {
+    console.log("hello world");
 })
