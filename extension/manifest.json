@@ -12,10 +12,6 @@
     "128": "./images/extensionIcons/extension-icon-128.png"
   },
 
-  "background": {
-    "scripts": ["./background.js"]
-  },
-
   "oauth2": {
     "client_id": "770480046288-dal2muv254r97ks59gl5br8l7n40fgfg.apps.googleusercontent.com",
     "scopes":["https://www.googleapis.com/auth/calendar"]
