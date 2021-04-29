@@ -1,13 +1,18 @@
 {
   "compilerOptions": {
     "module": "es6",
+    "moduleResolution": "Node",
     "target": "es6",
     "sourceMap": true,
-    "types": ["chrome"],
+    "types": [
+      "chrome",
+      "jest"
+    ],
     "rootDir": "src",
     "outDir": "extension/js"
   },
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "test"
   ]
 }

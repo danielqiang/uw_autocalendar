@@ -11,19 +11,36 @@ Our main source code will be in the [src](src/) directory. The [extension](exten
 Install [NodeJS](https://nodejs.org/en/), then install [TypeScript](https://www.typescriptlang.org/):
 
 ```
-npm install -g typescript
+sudo npm install -g typescript
 ```
 
-Install dependencies:
+Install build dependencies:
 
 ```
 npm install @types/chrome --save-dev
 ```
 
-Generate the JavaScript source files (from the project root directory):
+Install Jest dependencies:
 
 ```
-tsc
+npm install jest @types/jest ts-jest --save-dev
 ```
 
-Done! The [extension](extension/) directory can now be loaded into Chrome.
+To generate source files (from the project root directory):
+
+```
+npm run build
+```
+
+To run tests (via Jest):
+
+```
+npm run test
+```
+
+After building JS source files, the [extension](extension/) directory can be directly loaded into Chrome.
+
+## TODO
+
+* Fix module import issues; e.g. importing from `session.js` in `src/google_calendar.ts` 
+  fails within Jest, but importing from `session` fails within the Chrome extension.
