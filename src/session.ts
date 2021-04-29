@@ -17,7 +17,3 @@ export class Session {
         return this.request(HTTPMethod.POST, url, init)
     }
 }
-
-export abstract class AuthSession extends Session {
-    abstract token(): Promise<string>
-}
