@@ -1,7 +1,7 @@
-import {AuthSession} from "./session.js";
+import {Session} from "./session.js";
 
-export class GoogleOAuthSession extends AuthSession {
-    token(): Promise<string> {
+export class GoogleOAuthSession extends Session {
+    oauth_token(): Promise<string> {
         return new Promise(resolve => chrome.identity.getAuthToken({
             interactive: true
         }, success => resolve(success)))
@@ -17,10 +17,11 @@ export default class GoogleCalendar {
 
     async default_headers(): Promise<Headers> {
         return new Headers({
-            'Authorization': 'Bearer ' + await this.session.token(),
+            'Authorization': 'Bearer ' + await this.session.oauth_token(),
             'Content-Type': 'application/json'
         })
     }
+
     async download_events(): Promise<any> {
         const url = 'https://www.googleapis.com/calendar/v3/calendars/primary/events';
         const headers = await this.default_headers();
