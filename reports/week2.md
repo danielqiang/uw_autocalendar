@@ -23,7 +23,7 @@
     *   Have a basic project architecture ready (2 days)
     *   Work out error 302 redirect to log into canvas when making an API call. If a user does not already have the cookie they must be redirected to UW login to obtain one (4 days)
     *   Upload Canvas event to Google Calendar (3 days)
-    *   Finalize the button design (i.e. the number of buttons, functionality of each button, etc) that will be used in extension popup (1day)
+    *   Finalize the button design (i.e. the number of buttons, functionality of each button, etc) that will be used in extension popup (1 day)
 
 
 
