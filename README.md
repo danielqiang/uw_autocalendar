@@ -4,4 +4,19 @@
 
 ## Repo Layout
 
-Our main source code will be in the [src](src/) directory. The [extension](extension/) directory will (probably) contain boilerplate necessary for hooking our JavaScript source into Chrome as an add-on. 
+Our main source code will be in the [src](src/) directory. The [extension](extension/) directory is an unpacked Chrome addon that can be loaded directly as an extension.  
+
+## Setup Instructions
+
+Install [NodeJS](https://nodejs.org/en/), then install [TypeScript](https://www.typescriptlang.org/):
+
+```
+npm install -g typescript
+```
+Generate the JavaScript source files (from the project root directory):
+
+```
+tsc
+```
+
+Done! The [extension](extension/) directory can now be loaded into Chrome.
