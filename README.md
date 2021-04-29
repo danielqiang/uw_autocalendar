@@ -8,6 +8,9 @@ Our main source code will be in the [src](src/) directory. The [extension](exten
 
 ## Setup Instructions
 
+**Note:** These instructions have been tested on MacOS/Linux. Try them without `sudo` if running on Windows and update
+as necessary
+
 Install [NodeJS](https://nodejs.org/en/), then install [TypeScript](https://www.typescriptlang.org/):
 
 ```
@@ -17,13 +20,13 @@ sudo npm install -g typescript
 Install build dependencies:
 
 ```
-npm install @types/chrome --save-dev
+sudo npm install @types/chrome --save-dev
 ```
 
 Install Jest dependencies:
 
 ```
-npm install jest @types/jest ts-jest --save-dev
+sudo npm install jest @types/jest ts-jest --save-dev
 ```
 
 To generate source files (from the project root directory):
