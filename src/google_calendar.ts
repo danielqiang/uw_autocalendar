@@ -15,7 +15,7 @@ export default class GoogleCalendar {
         this.session = new GoogleOAuthSession();
     }
 
-    async default_headers(): Promise<Headers> {
+    private async default_headers(): Promise<Headers> {
         return new Headers({
             'Authorization': 'Bearer ' + await this.session.oauth_token(),
             'Content-Type': 'application/json'
