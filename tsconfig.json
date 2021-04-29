@@ -1,9 +1,11 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "es6",
     "target": "es6",
     "sourceMap": true,
-    "types": ["chrome"]
+    "types": ["chrome"],
+    "rootDir": "src",
+    "outDir": "extension/js"
   },
   "exclude": [
     "node_modules"
