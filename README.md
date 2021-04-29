@@ -13,6 +13,13 @@ Install [NodeJS](https://nodejs.org/en/), then install [TypeScript](https://www.
 ```
 npm install -g typescript
 ```
+
+Install dependencies:
+
+```
+npm install @types/chrome --save-dev
+```
+
 Generate the JavaScript source files (from the project root directory):
 
 ```
