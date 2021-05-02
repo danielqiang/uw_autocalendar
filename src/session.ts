@@ -1,7 +1,7 @@
 export enum HTTPMethod {
-    // We currently only use GET/POST requests
     GET = "GET",
     POST = "POST",
+    DELETE = "DELETE"
 }
 
 export class Session {
@@ -16,4 +16,7 @@ export class Session {
     async post(url: string, init?: RequestInit): Promise<Response> {
         return this.request(HTTPMethod.POST, url, init)
     }
-}
+
+    async delete(url: string, init?: RequestInit): Promise<Response> {
+        return this.request(HTTPMethod.DELETE, url, init)
+    }}
