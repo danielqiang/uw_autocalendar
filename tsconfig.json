@@ -9,7 +9,8 @@
       "jest"
     ],
     "rootDir": "src",
-    "outDir": "extension/js"
+    "outDir": "extension/js",
+    "esModuleInterop" : true,
   },
   "exclude": [
     "node_modules",
