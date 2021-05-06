@@ -17,7 +17,7 @@
     "scopes":["https://www.googleapis.com/auth/calendar"]
   },
 
-  "content_security_policy": "script-src 'self' https://apis.google.com/ ; object-src 'self'",
+  "content_security_policy": "script-src 'self' https://apis.google.com/ https://canvas.uw.edu/api; object-src 'self'",
 
   "options_page": "/html/options.html",
 
@@ -33,6 +33,7 @@
 
   "permissions": [
     "identity",
-    "https://www.googleapis.com/*"
+    "https://www.googleapis.com/*",
+    "https://canvas.uw.edu/api/*"
   ]
 }
