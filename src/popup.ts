@@ -27,8 +27,7 @@ const init = () => {
     document
         .getElementById("test-Canvas")
         .addEventListener("click", async function () {
-            // console.log(await canvas.get_ics());
-            console.log(await canvas.download_events());
+             console.log(await canvas.get_events());
         });
 };
 
