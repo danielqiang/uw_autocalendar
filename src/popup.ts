@@ -46,6 +46,12 @@ const init = () => {
     //     });
 
     document
+        .getElementById("oAuth")
+        .addEventListener("click", async function () {
+            console.log(await calendar.session.oauth_token());
+        });
+
+    document
         .getElementById("canvas")
         .addEventListener("click", function () {
             let opacity = document.getElementById("canvas-icon").style.opacity;
@@ -77,9 +83,9 @@ const init = () => {
             console.log("Start syncing from " + service);
 
             if (service === "canvas") {
-                // Canvas sync flow here
-                await sleep(3000);
+                console.log(await canvas.get_events());
 
+                // Clean up the page when sync process is done
                 remove_icon_focus("canvas-icon", "canvas", "n-canvas");
             }
 
