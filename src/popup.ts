@@ -8,12 +8,6 @@ const init = () => {
     var service = null;
 
     // document
-    //     .getElementById("test-OAuth")
-    //     .addEventListener("click", async function () {
-    //         console.log(await calendar.session.oauth_token());
-    //     });
-    //
-    // document
     //     .getElementById("test-download-events")
     //     .addEventListener("click", async function () {
     //         console.log(await calendar.download_events());
@@ -26,24 +20,6 @@ const init = () => {
     //         );
     //     });
     //
-    // document
-    //     .getElementById("test-Canvas")
-    //     .addEventListener("click", async function () {
-    //          console.log(await canvas.get_events());
-    //     });
-
-    // document
-    //     .getElementById("to-Google-calendar")
-    //     .addEventListener("click", async function () {
-    //         window.open("https://calendar.google.com/calendar/u/0/r");
-    //     });
-    //
-    // document
-    //     .getElementById("sync-Canvas")
-    //     .addEventListener("click", async function () {
-    //
-    //         console.log(await canvas.get_events());
-    //     });
 
     document
         .getElementById("oAuth")
@@ -118,6 +94,5 @@ const sleep = async (milliseconds: number): Promise<any> => {
         currentDate = Date.now();
     } while (currentDate - date < milliseconds);
 };
-
 
 init();
