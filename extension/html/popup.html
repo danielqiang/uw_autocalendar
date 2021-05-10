@@ -9,47 +9,40 @@
 
 <body>
   <div id="popup-header">
-    <img id="popup-logo" src="../images/extensionIcons/extension-icon.png" alt="UW Autocalendar Logo">
+    <img id="popup-logo" src="../images/extension_profile/extension-icon.png" alt="UW AutoCalendar Logo">
     <div id="popup-title">UW AutoCalendar</div>
   </div>
 
-  <div id="popup-message">
+  <div id="popup-message" class="info-container">
     <div id="bolt"></div>
     <div id="added-message"> UW AutoCalendar is active now. </div>
   </div>
 
-  <div id="next-steps">
-    What you can do next:
-    <li class="step">
-      step 1 step 1 step 1 step 1 step 1 step 1 step 1 step 1 step 1 step 1
-    </li>
-    <li class="step">
-      step 2 step 2 step 2 step 2 step 2 step 2 step 2 step 2 step 2 step 2
-    </li>
-    <li  class="step">
-      step 3 step 3 step 3 step 3 step 3 step 3 step 3 step 3 step 3 step 3
-    </li>
+  <div class="instructions">
+    Pick services you'd like to sync from:
   </div>
 
-  <div class="flex-container">
-<!--    <div>-->
-<!--      <button id= "sync-uw-schedule" class="functional-button">Sync UW Schedule</button>-->
-<!--    </div>-->
-<!--    <div>-->
-<!--      <button id="to-Google-calendar" class="functional-button">To Google Calendar</button>-->
-<!--    </div>-->
-    <div>
-      <button id="test-OAuth" class="functional-button">Test Oauth</button>
+  <div id="services" class="flex-container">
+    <div id="canvas" class="info-container icon-holder">
+      <img id="canvas-icon" class="icon" src="../images/services/canvas_icon.png" alt="Canvas Icon">
     </div>
-    <div>
-      <button id="test-download-events" class="functional-button">Test download events</button>
+    <div class="service-name"> Canvas </div>
+    <div id="gradescope" class="info-container icon-holder">
+      <img id="gradescope-icon" class="icon" src="../images/services/gradescope-icon.png" alt="Gradescope Icon">
     </div>
-    <div>
-      <button id="test-Canvas" class="functional-button">Test Canvas</button>
+    <div class="service-name"> Gradescope </div>
+    <div id="all" class="info-container icon-holder">
+      <img id="gradescope-icon2" class="icon" src="../images/services/gradescope-icon.png" alt="Gradescope Icon">
     </div>
-<!--    <div>-->
-<!--      <div class="g-signin2" data-onsuccess="onSignIn" data-ux_mode="redirect"></div>-->
-<!--    </div>-->
+    <div class="service-name"> All </div>
+  </div>
+
+  <div class="instructions">
+    Click to start synchronization:
+  </div>
+
+  <div id="sync-button">
+    <div id="start-sync"> Start Synchronization </div>
   </div>
 
   <!-- Scripts -->

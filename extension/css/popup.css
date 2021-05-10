@@ -25,19 +25,19 @@ body {
     margin-top: 5%;
     margin-left: 17%;
     font-family: "Lucida Console", "Courier New", monospace;
-    font-size: 20px;
+    font-size: 23px;
     font-weight: bold;
     background: -webkit-linear-gradient(#47228f, #e3c85d);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    flex: 2;
+    flex: 1;
 }
 
-#popup-message {
+div.info-container {
     border: #e0d6f5 solid 1px;
     background: rgba(224, 214, 245, 0.5);
     height: 35px;
-    margin: 1% 10% 7% 10%;
+    margin: 1% 5% 0 5%;
     border-radius: 4px;
     display: flex;
     align-items: center;
@@ -56,7 +56,7 @@ body {
     border-top: 0 solid;
     border-radius: 0;
     transform-origin: 50% 50% 0;
-    flex: 3;
+    flex: 1;
 }
 
 #bolt:after {
@@ -80,42 +80,83 @@ body {
 #added-message {
     text-align: center;
     vertical-align: center;
-    flex: 4
+    flex: 1
 }
 
-#next-steps {
-    font-size: large;
-    font-weight: bold;
-    margin: 5% 5% 5% 5%;
-}
-
-.step {
-    font-size: medium;
+.instructions {
+    margin-top: 5%;
+    margin-left: 5%;
+    color: rgb(60, 9, 60);
+    font-family: "Hiragino Kaku Gothic Pro", sans-serif;
+    font-size: 13px;
     font-weight: normal;
 }
+
+#services {
+    height: 100px;
+    margin-top: -5%;
+}
+
 .flex-container {
     display: flex;
     flex-wrap: wrap;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    padding-top: 3px;
+    flex: 0 0 50%;
 }
 
-.flex-container > div {
-    padding: 10px 10px 0 10px;
-    flex: 1 0 33%;
+div.icon-holder {
+    width: 53px;
+    height: 53px;
+    border-width: 4px;
+    margin-top: 2%;
+    background: white;
 }
-
-.functional-button {
-    width: 100%;
-    position: relative;
-    text-align: center;
-    font-size: 13px;
-    color: white;
-    background: rgba(96,50,159, 0.8);
-    border: none;
-    border-radius: 4px;
-    padding: 7px 7px 7px 7px;
+.icon-holder:hover {
     cursor: pointer;
 }
+
+img.icon {
+    width: 100%;
+    height: 100%;
+}
+
+.service-name {
+    text-align: center;
+    color: rgba(90, 24, 107, 0.6);
+    font-family: "Lucida Console", "Courier New", monospace;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+#sync-button {
+    margin: 2% 17% 0 17%;
+    align-items: center;
+    justify-content: center;
+    height: 30px;
+    border-radius: 3px;
+    border: #e0d6f5 solid 4px;
+    text-align: center;
+    box-shadow: 1px 2px rgba(70, 24, 60, 0.4);
+}
+
+#sync-button:hover {
+    cursor: pointer;
+}
+
+#start-sync:active {
+    background: rgba(224, 214, 245, 0.5);
+}
+
+#start-sync {
+    line-height: 30px;
+    color: rgb(70, 24, 60);
+    font-family: "Lucida Console", "Courier New", monospace;
+    font-size: 14px;
+    font-weight: bold;
+}
+
 
 
