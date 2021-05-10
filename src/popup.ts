@@ -34,14 +34,10 @@ const init = () => {
             if (parseInt(opacity) < 1) {
                 service = "canvas";
                 console.log("Choose service: " + service);
-
-                document.getElementById("canvas-icon").style.opacity = "1";
-                document.getElementById("canvas").style.border = "#9c6dd1 solid 4px";
-                document.getElementById("n-canvas").style.color = "rgb(90, 24, 107)";
+                add_icon_focus("canvas-icon", "canvas", "n-canvas");
             } else {
                 console.log("Cancel service: " + service);
                 service = null;
-
                 remove_icon_focus("canvas-icon", "canvas", "n-canvas");
             }
         });
@@ -51,7 +47,6 @@ const init = () => {
         .addEventListener("click", async function () {
             if (service == null) {
                 // Pop-up window
-
                 return;
             }
 
@@ -70,10 +65,16 @@ const init = () => {
         });
 };
 
-const remove_icon_focus = (icon: string, service: string, name: string) => {
+const add_icon_focus = (icon: string, service: string, s_name: string) => {
+    document.getElementById(icon).style.opacity = "1";
+    document.getElementById(service).style.border = "#9c6dd1 solid 4px";
+    document.getElementById(s_name).style.color = "rgb(90, 24, 107)";
+}
+
+const remove_icon_focus = (icon: string, service: string, s_name: string) => {
     document.getElementById(icon).style.opacity = "0.5";
     document.getElementById(service).style.border = "#e0d6f5 solid 4px";
-    document.getElementById(name).style.color = "rgba(90, 24, 107, 0.6)";
+    document.getElementById(s_name).style.color = "rgba(90, 24, 107, 0.6)";
 };
 
 const switch_sync_button_focus = async (focused: boolean): Promise<any> => {
@@ -84,15 +85,6 @@ const switch_sync_button_focus = async (focused: boolean): Promise<any> => {
         // Add focus
         document.getElementById("sync-button").style.border = "#9c6dd1 solid 4px";
     }
-};
-
-// Test purpose only
-const sleep = async (milliseconds: number): Promise<any> => {
-    const date = Date.now();
-    let currentDate = null;
-    do {
-        currentDate = Date.now();
-    } while (currentDate - date < milliseconds);
 };
 
 init();
