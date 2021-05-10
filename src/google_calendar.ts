@@ -73,7 +73,7 @@ export default class GoogleCalendar {
         const url = `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`;
         const headers = await this.default_headers();
         return this.session
-            .get(url, { headers: headers })
+            .get(url, {}, { headers: headers })
             .then((resp) => resp.json());
     }
 
@@ -86,7 +86,7 @@ export default class GoogleCalendar {
         const body = event.to_json();
 
         return this.session
-            .post(url, { headers: headers, body: body })
+            .post(url, {}, { headers: headers, body: body })
             .then((resp) => resp.json());
     }
 
@@ -94,7 +94,7 @@ export default class GoogleCalendar {
         const url = `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${eventId}`;
         const headers = await this.default_headers();
 
-        await this.session.delete(url, { headers: headers });
+        await this.session.delete(url, {}, { headers: headers });
     }
 
     async create_calendar(calendarName: string): Promise<any> {
@@ -105,7 +105,7 @@ export default class GoogleCalendar {
         });
 
         return this.session
-            .post(url, { headers: headers, body: body })
+            .post(url, {}, { headers: headers, body: body })
             .then((resp) => resp.json());
     }
 
@@ -113,6 +113,6 @@ export default class GoogleCalendar {
         const url = `https://www.googleapis.com/calendar/v3/calendars/${calendarId}`;
         const headers = await this.default_headers();
 
-        await this.session.delete(url, { headers: headers });
+        await this.session.delete(url, {}, { headers: headers });
     }
 }

@@ -1,9 +1,20 @@
 import { Session } from "./session.js";
 
+export interface CanvasObject {
+
+}
+export interface CanvasEvent extends CanvasObject{
+    // List all keys/types for canvas event
+}
+
+export interface CanvasAssignment extends CanvasObject{
+
+}
+
+
 export default class Canvas {
     session: Session;
     url: string;
-    MAX: number = (Number.MAX_SAFE_INTEGER - 1);
     constructor() {
         this.session = new Session();
         this.url = "https://canvas.uw.edu/api/v1/";
@@ -60,53 +71,69 @@ export default class Canvas {
         let course_to_events_dict = {};
         let user_id = await this.get_user_id();
         let user_courses = await this.get_course_ids_and_names();
-        for (let course_id of Object.keys(user_courses)){
-            course_to_events_dict[user_courses[course_id]] = await this.download_all_course_events(user_id, course_id);
+        for (let course_id of Object.keys(user_courses)) {
+            course_to_events_dict[
+                user_courses[course_id]
+            ] = await this.download_all_course_events(user_id, course_id);
         }
         return course_to_events_dict;
     }
 
-
     async get_user_id(): Promise<any> {
         const url = this.url + "users/self?include=[id]";
-        let user_profile = await this.session.get(url).then(r => r.json());
-        return user_profile.id
+        let user_profile = await this.session.get(url).then((r) => r.json());
+        return user_profile.id;
     }
 
-    async get_course_ids_and_names(): Promise<any>{
+    async get_course_ids_and_names(): Promise<any> {
         let course_id_to_name = {};
         // This is a super rough way of looking 13 weeks in the past. The reason we need to do this is because
         // we can not rely on profs to mark their class as finished upon completion in the canvas system therefore
         // we filter classes by those who have started in the past 13 weeks.
-        let thirteen_weeks_ago = new Date(
-            new Date().getTime() - 1000 * 60 * 60 * 24 * 7 * 13
-        );
+
+        // let thirteen_weeks_ago = new Date(
+        //     new Date().getTime() - 1000 * 60 * 60 * 24 * 7 * 13
+        // );
 
         await this.session
-            .get(this.url + "courses" + "?per_page=" + this.MAX)
-            .then(resp => resp.json())
-            .then(resp => {
+            .get(this.url + "courses")
+            .then((resp) => resp.json())
+            .then((resp) => {
                 let course_data = resp;
                 for (let course_index in course_data) {
                     let course = course_data[course_index];
                     // Get course starting date.
-                    let date = new Date(course["start_at"]);
-                    if (date >= thirteen_weeks_ago) {
-                        course_id_to_name[course.id] = course.name;
-                    }
+                    // let date = new Date(course["start_at"]);
+                    // if (date >= thirteen_weeks_ago) {
+                    course_id_to_name[course.id] = course.name;
+                    // }
                 }
             });
         return course_id_to_name;
     }
 
-    async download_all_course_events(user_id: String, course_id: String): Promise<any> {
-        const assignment_url = this.url + "calendar_events?type=assignment&context_codes%5B%5D=user_" + user_id +
-            "&context_codes%5B%5D=course_" + course_id + "&all_events=true&per_page=" + this.MAX;
-        const event_url = this.url + "calendar_events?type=event&context_codes%5B%5D=user_" + user_id +
-            "&context_codes%5B%5D=course_" + course_id + "&all_events=true&per_page=" + this.MAX;
-        const assignments = await this.session.get(assignment_url).then((r) => r.json());
+    async download_all_course_events(
+        user_id: String,
+        course_id: String
+    ): Promise<any> {
+        const assignment_url =
+            this.url +
+            "calendar_events?type=assignment&context_codes%5B%5D=user_" +
+            user_id +
+            "&context_codes%5B%5D=course_" +
+            course_id +
+            "&all_events=true";
+        const event_url =
+            this.url +
+            "calendar_events?type=event&context_codes%5B%5D=user_" +
+            user_id +
+            "&context_codes%5B%5D=course_" +
+            course_id +
+            "&all_events=true";
+        const assignments = await this.session
+            .get(assignment_url)
+            .then((r) => r.json());
         const events = await this.session.get(event_url).then((r) => r.json());
         return assignments.concat(events);
     }
-
 }

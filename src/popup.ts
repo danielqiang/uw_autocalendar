@@ -1,6 +1,10 @@
 import GoogleCalendar from "./google_calendar.js";
-import Canvas from "./canvas.js";
+import Canvas from "./canvas1.js";
 
+
+// TODO:
+//  - Write interface for Canvas event object and Canvas assignment object
+//  - Write a transformer that transforms canvas objects to google calendar
 const init = () => {
     const calendar = new GoogleCalendar();
     const canvas = new Canvas();
@@ -27,7 +31,13 @@ const init = () => {
     document
         .getElementById("test-Canvas")
         .addEventListener("click", async function () {
-             console.log(await canvas.get_events());
+            console.log(await canvas.download_all_assignments());
+            console.log(await canvas.download_all_events())
+
+            // const events = canvas.download_all_events()
+            // for (let event of events) {
+            //    const google_calendar_event = to_google_calendar_event(event)
+            //    google_calendar.upload_event(event)
         });
 };
 
