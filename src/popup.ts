@@ -53,7 +53,6 @@ const init = () => {
                 service = "canvas";
                 console.log("Choose service: " + service);
 
-                remove_focus();
                 document.getElementById("canvas-icon").style.opacity = "1";
                 document.getElementById("canvas").style.border = "#9c6dd1 solid 4px";
                 document.getElementById("n-canvas").style.color = "rgb(90, 24, 107)";
@@ -61,23 +60,56 @@ const init = () => {
                 console.log("Cancel service: " + service);
                 service = null;
 
-                document.getElementById("canvas-icon").style.opacity = "0.5";
-                document.getElementById("canvas").style.border = "#e0d6f5 solid 4px";
-                document.getElementById("n-canvas").style.color = "rgba(90, 24, 107, 0.6)";
+                remove_icon_focus("canvas-icon", "canvas", "n-canvas");
             }
         });
 
     document
-        .getElementById("sync-button")
-        .addEventListener("click", function () {
-           if (service === "canvas") {
-               // Canvas sync flow here
-           }
+        .getElementById("start-sync")
+        .addEventListener("click", async function () {
+            if (service == null) {
+                // Pop-up window
+            }
+
+            // Start loading animation ...
+            console.log("Start syncing from " + service);
+
+            if (service === "canvas") {
+                // Canvas sync flow here
+                await sleep(3000);
+
+                remove_icon_focus("canvas-icon", "canvas", "n-canvas");
+            }
+
+            // Stop animation ...
+            console.log("Finish syncing from " + service);
         });
 };
 
-const remove_focus = () => {
-    let icons = document.getElementsByClassName("icon");
+const remove_icon_focus = (icon: string, service: string, name: string) => {
+    document.getElementById(icon).style.opacity = "0.5";
+    document.getElementById(service).style.border = "#e0d6f5 solid 4px";
+    document.getElementById(name).style.color = "rgba(90, 24, 107, 0.6)";
 };
+
+const switch_sync_button_focus = async (focused: boolean): Promise<any> => {
+    if (focused) {
+        // Remove focus
+        document.getElementById("sync-button").style.border = "#e0d6f5 solid 4px";
+    } else {
+        // Add focus
+        document.getElementById("sync-button").style.border = "#9c6dd1 solid 4px";
+    }
+};
+
+// Test purpose only
+const sleep = async (milliseconds: number): Promise<any> => {
+    const date = Date.now();
+    let currentDate = null;
+    do {
+        currentDate = Date.now();
+    } while (currentDate - date < milliseconds);
+};
+
 
 init();
