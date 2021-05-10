@@ -69,6 +69,8 @@ const init = () => {
         .addEventListener("click", async function () {
             if (service == null) {
                 // Pop-up window
+
+                return;
             }
 
             // Start loading animation ...

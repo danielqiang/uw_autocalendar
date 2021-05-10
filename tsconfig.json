@@ -11,6 +11,7 @@
     "rootDir": "src",
     "outDir": "extension/js",
     "esModuleInterop" : true,
+    "allowUnreachableCode": true
   },
   "exclude": [
     "node_modules",
