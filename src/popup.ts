@@ -73,7 +73,7 @@ const init = () => {
                     console.log(course_events);
                     for(let event of course_events){
                         //gcal_events.push(calendar.to_google_calendar_event(event));
-                        await calendar.create_event(calendar.to_google_calendar_event(event), "c_b4l9746ujujo83sh3dvl65jah8@group.calendar.google.com")
+                        await calendar.create_event(calendar.to_google_calendar_event(event), "c_67oc22gavt7vb9grrqf9i3md9g@group.calendar.google.com")
                         console.log(event);
                     }
                 }
