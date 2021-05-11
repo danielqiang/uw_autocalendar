@@ -68,7 +68,9 @@ const init = () => {
                     console.log(course);
                     console.log(course_events);
                     for(let event of course_events){
-                        gcal_events.push(calendar.to_google_calendar_event(event));
+                        //gcal_events.push(calendar.to_google_calendar_event(event));
+                        await calendar.create_event(calendar.to_google_calendar_event(event), "c_b4l9746ujujo83sh3dvl65jah8@group.calendar.google.com")
+                        console.log(event);
                     }
                 }
 
@@ -87,13 +89,13 @@ const init = () => {
             // Uploading to google calendar
             // let v = gcal_events.pop();
             // console.log(v);
-            // await calendar.create_event(v, "c_iv7s122a2ooc2jr75g4oouiac8@group.calendar.google.com");
+            // await calendar.create_event(v, "c_klc037ff4133segl4tb21kpa6s@group.calendar.google.com");
 
-            for(let event of gcal_events){
-                // remember to change the cal id to the cal you want to upload to.
-                await calendar.create_event(event, "c_iv7s122a2ooc2jr75g4oouiac8@group.calendar.google.com")
-                console.log(event);
-            }
+            // for(let event of gcal_events){
+            //     // remember to change the cal id to the cal you want to upload to.
+            //     await calendar.create_event(event, "c_klc037ff4133segl4tb21kpa6s@group.calendar.google.com")
+            //     console.log(event);
+            // }
 
             // Stop animation ...
             console.log("Finish syncing from " + service);
