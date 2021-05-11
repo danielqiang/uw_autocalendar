@@ -1,13 +1,6 @@
-import GoogleCalendar, {GoogleCalendarEvent} from "./google_calendar.js";
+import GoogleCalendar, { GoogleCalendarEvent } from "./google_calendar.js";
 import Canvas from "./canvas.js";
 
-function download(content, fileName) {
-    let a = document.createElement("a");
-    let file = new Blob([JSON.stringify(content)], { type: "text/plain" });
-    a.href = URL.createObjectURL(file);
-    a.download = fileName;
-    a.click();
-}
 
 const init = () => {
     const calendar = new GoogleCalendar();
@@ -59,17 +52,22 @@ const init = () => {
 
             // Start loading animation ...
             console.log("Start syncing from " + service);
-            let gcal_events: Array<GoogleCalendarEvent> = [];
+            // let gcal_events: Array<GoogleCalendarEvent> = [];
             if (service === "canvas") {
-                const events = await canvas.get_events();
-                const assignments = await canvas.get_assignments();
+                const events = await canvas.download_events();
+                const assignments = await canvas.download_assignments();
+
+                // for (let [course, course_events] of events) {
+                //     console.log(course);
+                //     console.log(course_events);
+                //     for(let event of course_events){
+                //         gcal_events.push(calendar.to_google_calendar_event(event));
+                //     }
+                // }
 
                 for (let [course, course_events] of events) {
                     console.log(course);
                     console.log(course_events);
-                    for(let event of course_events){
-                        gcal_events.push(calendar.to_google_calendar_event(event));
-                    }
                 }
 
                 for (let [course, course_assignments] of assignments) {
@@ -89,15 +87,17 @@ const init = () => {
             // console.log(v);
             // await calendar.create_event(v, "c_iv7s122a2ooc2jr75g4oouiac8@group.calendar.google.com");
 
-            for(let event of gcal_events){
-                // remember to change the cal id to the cal you want to upload to.
-                await calendar.create_event(event, "c_iv7s122a2ooc2jr75g4oouiac8@group.calendar.google.com")
-                console.log(event);
-            }
+            // for (let event of gcal_events) {
+            //     // remember to change the cal id to the cal you want to upload to.
+            //     await calendar.create_event(
+            //         event,
+            //         "c_iv7s122a2ooc2jr75g4oouiac8@group.calendar.google.com"
+            //     );
+            //     console.log(event);
+            // }
 
             // Stop animation ...
             console.log("Finish syncing from " + service);
-
         });
 };
 

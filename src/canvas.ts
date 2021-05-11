@@ -1,4 +1,71 @@
-import { Session } from "./session.js";
+import { HTTPMethod, Session } from "./session.js";
+import {download} from "./utils.js";
+
+export class CanvasSAMLSession extends Session {
+    static logs: string[] = []
+
+    async is_authenticated(): Promise<boolean> {
+        const url = `${Canvas.API_URL}/courses`;
+        const response = await this.get(url);
+        return response.status === 200;
+    }
+
+    async authenticate(): Promise<boolean> {
+        // Should be synchronous with a provided callback. The `return Promise(..., onSuccess=...)`
+        // pattern is what transforms it into an async flow, but the
+        // authentication block itself is synchronous.
+
+        return new Promise((resolve) => {
+            this.saml_flow(resolve);
+        });
+    }
+
+    private async saml_flow(callback: Function) {
+        const load_handler = function () {
+            const observer = new MutationObserver(function (mutations) {
+                mutations.forEach(function (mutation) {
+                    if (
+                        document.location.href.startsWith(
+                            "https://canvas.uw.edu"
+                        )
+                    ) {
+                        window.removeEventListener("load", load_handler);
+                        callback();
+                    } else {
+                       CanvasSAMLSession.logs.push(document.location.href)
+                        download(CanvasSAMLSession.logs, "test.json")
+                    }
+                });
+            });
+            observer.observe(document.querySelector("body"), {
+                childList: true,
+                subtree: true,
+            });
+        };
+        window.addEventListener("load", load_handler);
+        window.open("https://apps.canvas.uw.edu/wayf");
+    }
+
+    async request(
+        method: HTTPMethod,
+        url: string,
+        init?: RequestInit
+    ): Promise<Response> {
+        const response = await super.request(method, url, init);
+        return response;
+
+        // TODO: The auth flow should look something more like this, i.e. when an API call fails,
+        //  we authenticate (authenticate() should "block" until authentication is complete) then
+        //  retry the request. For now, request() just calls super.request().
+
+        // if (response.status >= 400) {
+        //     await this.authenticate();
+        //     return super.request(method, url, init);
+        // } else {
+        //     return response;
+        // }
+    }
+}
 
 export interface CanvasAssignment {
     //interface_type: 'assignment';
@@ -116,182 +183,78 @@ export interface EventAssignment {
     require_lockdown_browser: boolean;
 }
 
+enum CanvasEventType {
+    ASSIGNMENT = "assignment",
+    EVENT = "event",
+}
+
 export default class Canvas {
-    session: Session;
-    url: string;
-    MAX: number = Number.MAX_SAFE_INTEGER - 1;
+    private session: CanvasSAMLSession;
+    private _user_id: number;
+    static readonly API_URL: string = "https://canvas.uw.edu/api/v1";
+
     constructor() {
-        this.session = new Session();
-        this.url = "https://canvas.uw.edu/api/v1/";
+        this.session = new CanvasSAMLSession();
     }
 
-    /** check_login_auth will redirect the user to make an API call from canvas, requiring authentication.
-     * In the scenario that user does not have authorized cookies this function returns false
-     * and user will be automatically be redirected to UW login portal where they input their pass and save cookies.
-     * If user successfully navigates to canvas.uw.edu.* without redirect or error (code 200) this function returns true
-     *
-     * Note: user without auth cookies will be asked to login, however this function is not able to recognize when
-     * the user successfully connects to canvas AFTER the initial attempt
-     * (this requires communication between
-     * foreground and background scripts, very hard)
-     * Therefore the user must open the chrome extension again,
-     * with the auth cookie now generated, and kick off the flow.
-     *
-     * @returns boolean: whether or not the user has auth cookies for canvas and is able to query the API,
-     * true for yes, false otherwise
-     */
-    async check_login_auth(): Promise<boolean> {
-        return await this.session.get(this.url + "courses").then((resp) => {
-            // Session unable to query the API, send them to canvas.uw.edu to login and obtain auth cookies.
-            if (resp.status != 200) {
-                window.open("https://canvas.uw.edu");
-            } else if (resp.status == 200) {
-                // User successfully queries the canvas API, user has the required auth cookies, return true.
-                return true;
+    async get_user_id(): Promise<number> {
+        if (this._user_id === undefined) {
+            const url = Canvas.API_URL + "/users/self?include=[id]";
+            const user_id = await this.session
+                .get(url)
+                .then((r) => r.json())
+                .then((user) => user.id);
+            this._user_id = user_id;
+        }
+        return this._user_id;
+    }
+
+    async download_events(): Promise<Map<string, CanvasEvent[]>> {
+        return this.download_calendar_events(CanvasEventType.EVENT);
+    }
+
+    async download_assignments(): Promise<Map<string, CanvasAssignment[]>> {
+        return this.download_calendar_events(CanvasEventType.ASSIGNMENT);
+    }
+
+    private async download_calendar_events(
+        event_type: CanvasEventType
+    ): Promise<Map<string, any[]>> {
+        if (!(await this.session.is_authenticated())) {
+            await this.session.authenticate();
+        }
+
+        const courses_url = `${Canvas.API_URL}/courses`;
+        const courses = await this.session
+            .get(courses_url)
+            .then((r) => r.json());
+
+        let events = new Map();
+        for (const course of courses) {
+            if (!events.has(course.name)) {
+                events.set(course.name, []);
             }
-            return false;
-        });
-    }
-
-    /**
-     * get_ics() will attempt to query a users canvas information using existing cookies, if user does not have auth
-     * cookies get_ics will return null, otherwise will return a readableStream attached to the .ics file for a
-     * currently enrolled class belonging to the user.
-     *
-     * How is "currently enrolled" determined? Currently enrolled is based on the listed start date of the course
-     * on the canvas API. If the start date of the course is less than *13* weeks from the current date, the course
-     * is considered currently enrolled. We chose 13 weeks because fall quarter is abnormally long,
-     * unexpected behavior created by this may include multiple quarter's events being returned by get_ics().
-     *
-     * @returns null if user does not have auth cookies, else array of readable streams,
-     * one per course, attached to the calendar .ics file for the course
-     *
-     **/
-    async get_events(): Promise<Map<string, CanvasEvent[]>> {
-        const is_authenticated = await this.check_login_auth();
-        if (!is_authenticated) {
-            return null;
+            events
+                .get(course.name)
+                .push(await this.download_course_events(event_type, course.id));
         }
 
-        let course_to_events_dict = new Map();
-        let user_id = await this.get_user_id();
-        let user_courses = await this.get_course_ids_and_names();
-        for (let course_id of Object.keys(user_courses)) {
-            course_to_events_dict.set(
-                user_courses[course_id],
-                await this.download_events(user_id, course_id)
-            );
-        }
-        return course_to_events_dict;
-    }
-
-    async get_assignments(): Promise<Map<string, CanvasAssignment[]>> {
-        if (!(await this.check_login_auth())) {
-            return null;
-        }
-
-        let course_to_events_dict = new Map();
-        let user_id = await this.get_user_id();
-        let user_courses = await this.get_course_ids_and_names();
-        for (let course_id of Object.keys(user_courses)) {
-            course_to_events_dict.set(
-                user_courses[course_id],
-                await this.download_assignments(user_id, course_id)
-            );
-        }
-        return course_to_events_dict;
-    }
-
-    async get_user_id(): Promise<any> {
-        const url = this.url + "users/self?include=[id]";
-        let user_profile = await this.session.get(url).then((r) => r.json());
-        return user_profile.id;
-    }
-
-    async get_course_ids_and_names(): Promise<any> {
-        let course_id_to_name = {};
-        // This is a super rough way of looking 13 weeks in the past. The reason we need to do this is because
-        // we can not rely on profs to mark their class as finished upon completion in the canvas system therefore
-        // we filter classes by those who have started in the past 13 weeks.
-        let thirteen_weeks_ago = new Date(
-            new Date().getTime() - 1000 * 60 * 60 * 24 * 7 * 13
-        );
-
-        await this.session
-            .get(this.url + "courses" + "?per_page=" + this.MAX)
-            .then((resp) => resp.json())
-            .then((resp) => {
-                let course_data = resp;
-                for (let course_index in course_data) {
-                    let course = course_data[course_index];
-                    // Get course starting date.
-                    let date = new Date(course["start_at"]);
-                    if (date >= thirteen_weeks_ago) {
-                        course_id_to_name[course.id] = course.name;
-                    }
-                }
-            });
-        return course_id_to_name;
-    }
-
-    async download_all_course_events(
-        user_id: String,
-        course_id: String
-    ): Promise<any> {
-        const assignment_url =
-            this.url +
-            "calendar_events?type=assignment&context_codes%5B%5D=user_" +
-            user_id +
-            "&context_codes%5B%5D=course_" +
-            course_id +
-            "&all_events=true&per_page=" +
-            this.MAX;
-        const event_url =
-            this.url +
-            "calendar_events?type=event&context_codes%5B%5D=user_" +
-            user_id +
-            "&context_codes%5B%5D=course_" +
-            course_id +
-            "&all_events=true&per_page=" +
-            this.MAX;
-        const assignments = await this.session
-            .get(assignment_url)
-            .then((r) => r.json());
-        const events = await this.session.get(event_url).then((r) => r.json());
-        return assignments.concat(events);
-    }
-
-    async download_assignments(
-        user_id: string,
-        course_id: string
-    ): Promise<CanvasAssignment[]> {
-        const assignment_url =
-            this.url +
-            "calendar_events?type=assignment&context_codes%5B%5D=user_" +
-            user_id +
-            "&context_codes%5B%5D=course_" +
-            course_id +
-            "&all_events=true&per_page=" +
-            this.MAX;
-        const assignments = await this.session
-            .get(assignment_url)
-            .then((r) => r.json());
-        return assignments;
-    }
-
-    async download_events(
-        user_id: string,
-        course_id: string
-    ): Promise<CanvasEvent[]> {
-        const event_url =
-            this.url +
-            "calendar_events?type=event&context_codes%5B%5D=user_" +
-            user_id +
-            "&context_codes%5B%5D=course_" +
-            course_id +
-            "&all_events=true&per_page=" +
-            this.MAX;
-        const events = await this.session.get(event_url).then((r) => r.json());
         return events;
+    }
+
+    private async download_course_events(
+        event_type: CanvasEventType,
+        course_id: number
+    ): Promise<any> {
+        const params = new URLSearchParams([
+            ["type", event_type],
+            ["context_codes[]", `user_${await this.get_user_id()}`],
+            ["context_codes[]", `course_${course_id}`],
+            ["all_events", "true"],
+        ]);
+        const url = `${Canvas.API_URL}/calendar_events?${params}`;
+
+        const course_events = await this.session.get(url).then((r) => r.json());
+        return course_events;
     }
 }

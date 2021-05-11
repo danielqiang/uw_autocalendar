@@ -1,17 +1,17 @@
 import { Session } from "./session.js";
-import {CanvasAssignment} from "./canvas.js";
-import {CanvasEvent} from "./canvas.js";
-import {LockInfo} from "./canvas.js";
-import {EventAssignment} from "./canvas.js";
+import { CanvasAssignment } from "./canvas.js";
+import { CanvasEvent } from "./canvas.js";
+import { LockInfo } from "./canvas.js";
+import { EventAssignment } from "./canvas.js";
 
 export class GoogleOAuthSession extends Session {
-    oauth_token(): Promise<string> {
+    async oauth_token(): Promise<string> {
         return new Promise((resolve) =>
             chrome.identity.getAuthToken(
                 {
                     interactive: true,
                 },
-                (success) => resolve(success)
+                (token) => resolve(token)
             )
         );
     }
@@ -120,17 +120,19 @@ export default class GoogleCalendar {
         await this.session.delete(url, { headers: headers });
     }
 
-    to_google_calendar_event(event: CanvasEvent | CanvasAssignment): GoogleCalendarEvent{
+    to_google_calendar_event(
+        event: CanvasEvent | CanvasAssignment
+    ): GoogleCalendarEvent {
         let start = null;
         let end = null;
         let title = null;
         let description = null;
-        if(event.type === 'event'){
+        if (event.type === "event") {
             title = event.title;
             description = event.description;
             start = new Date(event.start_at);
             end = new Date(event.end_at);
-        }else if(event.type === 'assignment'){
+        } else if (event.type === "assignment") {
             //let assignment = <EventAssignment> event.assignment;
             title = event.title;
             description = event.html_url.concat(" ", event.description);
@@ -143,8 +145,13 @@ export default class GoogleCalendar {
             // }
             start = new Date(event.start_at);
             end = new Date(event.end_at);
-
         }
-        return new GoogleCalendarEvent(start, end, CalendarTimeZone.US_LA, title, description);
+        return new GoogleCalendarEvent(
+            start,
+            end,
+            CalendarTimeZone.US_LA,
+            title,
+            description
+        );
     }
 }
