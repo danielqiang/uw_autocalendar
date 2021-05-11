@@ -1,6 +1,7 @@
 import { Session } from "./session.js";
 
 export interface CanvasAssignment {
+    //interface_type: 'assignment';
     id: number;
     title: string;
     start_at: string;
@@ -28,6 +29,7 @@ export interface CanvasAssignment {
 }
 
 export interface CanvasEvent {
+    //interface_type: 'event';
     title: string;
     description: string;
     workflow_state: string;

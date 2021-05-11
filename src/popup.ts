@@ -1,4 +1,4 @@
-import GoogleCalendar from "./google_calendar.js";
+import GoogleCalendar, {GoogleCalendarEvent} from "./google_calendar.js";
 import Canvas from "./canvas.js";
 
 function download(content, fileName) {
@@ -33,6 +33,7 @@ const init = () => {
         .getElementById("oAuth")
         .addEventListener("click", async function () {
             console.log(await calendar.session.oauth_token());
+            //console.log(calendar.create_calendar("AutoCal test 4").then())
         });
 
     document.getElementById("canvas").addEventListener("click", function () {
@@ -58,7 +59,7 @@ const init = () => {
 
             // Start loading animation ...
             console.log("Start syncing from " + service);
-
+            let gcal_events: Array<GoogleCalendarEvent> = [];
             if (service === "canvas") {
                 const events = await canvas.get_events();
                 const assignments = await canvas.get_assignments();
@@ -66,14 +67,32 @@ const init = () => {
                 for (let [course, course_events] of events) {
                     console.log(course);
                     console.log(course_events);
+                    for(let event of course_events){
+                        gcal_events.push(calendar.to_google_calendar_event(event));
+                    }
                 }
+
                 for (let [course, course_assignments] of assignments) {
                     console.log(course);
                     console.log(course_assignments);
+                    // for(let event of course_assignments){
+                    //     gcal_events.push(calendar.to_google_calendar_event(event));
+                    // }
                 }
 
                 // Clean up the page when sync process is done
                 remove_icon_focus("canvas-icon", "canvas", "n-canvas");
+            }
+
+            // Uploading to google calendar
+            // let v = gcal_events.pop();
+            // console.log(v);
+            // await calendar.create_event(v, "c_iv7s122a2ooc2jr75g4oouiac8@group.calendar.google.com");
+
+            for(let event of gcal_events){
+                // remember to change the cal id to the cal you want to upload to.
+                await calendar.create_event(event, "c_iv7s122a2ooc2jr75g4oouiac8@group.calendar.google.com")
+                console.log(event);
             }
 
             // Stop animation ...
