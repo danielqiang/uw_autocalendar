@@ -5,7 +5,7 @@ import {LockInfo} from "./canvas.js";
 import {EventAssignment} from "./canvas.js";
 
 export class GoogleOAuthSession extends Session {
-    oauth_token(): Promise<string> {
+    async oauth_token(): Promise<string> {
         return new Promise((resolve) =>
             chrome.identity.getAuthToken(
                 {
@@ -14,6 +14,10 @@ export class GoogleOAuthSession extends Session {
                 (success) => resolve(success)
             )
         );
+    }
+
+    async remove_token(token: string): Promise<void> {
+        return new Promise((resolve) => chrome.identity.removeCachedAuthToken({token: token}, resolve))
     }
 }
 
@@ -101,16 +105,18 @@ export default class GoogleCalendar {
         await this.session.delete(url, { headers: headers });
     }
 
-    async create_calendar(calendarName: string): Promise<any> {
+    async create_calendar(calendarName: string): Promise<string> {
         const url = `https://www.googleapis.com/calendar/v3/calendars`;
         const headers = await this.default_headers();
         const body = JSON.stringify({
             summary: calendarName,
         });
 
-        return this.session
+        const response = await this.session
             .post(url, { headers: headers, body: body })
             .then((resp) => resp.json());
+
+        return response.id
     }
 
     async delete_calendar(calendarId: string) {

@@ -32,8 +32,9 @@ const init = () => {
     document
         .getElementById("oAuth")
         .addEventListener("click", async function () {
+            // await calendar.session.remove_token(await calendar.session.oauth_token())
             console.log(await calendar.session.oauth_token());
-            //console.log(calendar.create_calendar("AutoCal test 4").then())
+            // console.log(await calendar.create_calendar("AutoCal test 4"))
         });
 
     document.getElementById("canvas").addEventListener("click", function () {
@@ -65,6 +66,7 @@ const init = () => {
 
             let gcal_events: Array<GoogleCalendarEvent> = [];
             if (service === "canvas") {
+                const calendar_id = await calendar.create_calendar("Autocalendar Demo")
                 const events = await canvas.get_events();
                 const assignments = await canvas.get_assignments();
 
@@ -73,7 +75,7 @@ const init = () => {
                     console.log(course_events);
                     for(let event of course_events){
                         //gcal_events.push(calendar.to_google_calendar_event(event));
-                        await calendar.create_event(calendar.to_google_calendar_event(event), "c_67oc22gavt7vb9grrqf9i3md9g@group.calendar.google.com")
+                        await calendar.create_event(calendar.to_google_calendar_event(event), calendar_id)
                         console.log(event);
                     }
                 }
