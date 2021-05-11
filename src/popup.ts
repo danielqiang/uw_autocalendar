@@ -42,24 +42,26 @@ const init = () => {
             service = "canvas";
             console.log("Choose service: " + service);
             add_icon_focus("canvas-icon", "canvas", "n-canvas");
+            add_sync_button_focus();
         } else {
             console.log("Cancel service: " + service);
             service = null;
             remove_icon_focus("canvas-icon", "canvas", "n-canvas");
+            remove_sync_button_focus();
         }
     });
 
     document
-        .getElementById("start-sync")
+        .getElementById("sync-to-calendar")
         .addEventListener("click", async function () {
             if (service == null) {
-                // Pop-up window
+                console.log("No service has been chosen");
                 return;
             }
 
-            // Start loading animation ...
             console.log("Start syncing from " + service);
             let gcal_events: Array<GoogleCalendarEvent> = [];
+
             if (service === "canvas") {
                 const events = await canvas.get_events();
                 const assignments = await canvas.get_assignments();
@@ -79,9 +81,6 @@ const init = () => {
                     //     gcal_events.push(calendar.to_google_calendar_event(event));
                     // }
                 }
-
-                // Clean up the page when sync process is done
-                remove_icon_focus("canvas-icon", "canvas", "n-canvas");
             }
 
             // Uploading to google calendar
@@ -95,9 +94,11 @@ const init = () => {
                 console.log(event);
             }
 
-            // Stop animation ...
+            // Clean up the page when sync process is done
+            remove_icon_focus("canvas-icon", "canvas", "n-canvas");
+            remove_sync_button_focus();
             console.log("Finish syncing from " + service);
-
+            service = null;
         });
 };
 
@@ -113,16 +114,16 @@ const remove_icon_focus = (icon: string, service: string, s_name: string) => {
     document.getElementById(s_name).style.color = "rgba(90, 24, 107, 0.6)";
 };
 
-const switch_sync_button_focus = async (focused: boolean): Promise<any> => {
-    if (focused) {
-        // Remove focus
-        document.getElementById("sync-button").style.border =
-            "#e0d6f5 solid 4px";
-    } else {
-        // Add focus
-        document.getElementById("sync-button").style.border =
-            "#9c6dd1 solid 4px";
-    }
+const add_sync_button_focus = () => {
+    document.getElementById("sync-button").style.border = "rgba(90, 24, 107, 0.6) solid 2px";
+    document.getElementById("sync-button").style.boxShadow = "1px 2px rgb(70, 24, 60, 0.85)";
+    document.getElementById("sync-to-calendar").style.color = "rgb(60, 14, 50)";
+};
+
+const remove_sync_button_focus = () => {
+    document.getElementById("sync-button").style.border = "#e0d6f5 solid 2px";
+    document.getElementById("sync-button").style.boxShadow = "1px 2px rgba(70, 24, 60, 0.4)";
+    document.getElementById("sync-to-calendar").style.color = "rgba(70, 24, 60, 0.5)";
 };
 
 init();
