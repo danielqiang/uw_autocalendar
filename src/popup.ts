@@ -1,40 +1,80 @@
-import GoogleCalendar, {GoogleCalendarEvent} from "./google_calendar.js";
-import Canvas from "./canvas.js";
+import GoogleCalendar, { GoogleCalendarEvent } from "./google_calendar.js";
+import Canvas, {
+    CanvasCalendarEvent,
+    CanvasAssignmentEvent,
+} from "./canvas.js";
+import { batch_await } from "./utils.js";
 
-function download(content, fileName) {
-    let a = document.createElement("a");
-    let file = new Blob([JSON.stringify(content)], { type: "text/plain" });
-    a.href = URL.createObjectURL(file);
-    a.download = fileName;
-    a.click();
+class AutoCalendar {
+    calendar: GoogleCalendar;
+    canvas: Canvas;
+
+    constructor() {
+        this.calendar = new GoogleCalendar();
+        this.canvas = new Canvas();
+    }
+
+    async sync_canvas(calendar_name: string) {
+        const calendar_id = await this.calendar.create_calendar(calendar_name);
+
+        let events: GoogleCalendarEvent[] = [];
+
+        for (const course_events of (
+            await this.canvas.download_events()
+        ).values()) {
+            course_events.forEach((e) =>
+                events.push(this.event_to_calendar_event(e))
+            );
+        }
+
+        for (const course_assignments of (
+            await this.canvas.download_assignments()
+        ).values()) {
+            course_assignments.forEach((e) =>
+                events.push(this.assignment_to_calendar_event(e))
+            );
+        }
+
+        await batch_await(
+            events,
+            (event) => this.calendar.create_event(event, calendar_id),
+            GoogleCalendar.RATE_LIMIT
+        );
+    }
+
+    private assignment_to_calendar_event(
+        assignment: CanvasAssignmentEvent
+    ): GoogleCalendarEvent {
+        return new GoogleCalendarEvent(
+            new Date(assignment.assignment.unlock_at),
+            new Date(assignment.assignment.due_at),
+            assignment.title,
+            assignment.description
+        );
+    }
+
+    private event_to_calendar_event(
+        event: CanvasCalendarEvent
+    ): GoogleCalendarEvent {
+        return new GoogleCalendarEvent(
+            new Date(event.start_at),
+            new Date(event.end_at),
+            event.title,
+            event.description
+        );
+    }
 }
 
 const init = () => {
-    const calendar = new GoogleCalendar();
-    const canvas = new Canvas();
+    const autocalendar = new AutoCalendar();
 
     let service = null;
-
-    // document
-    //     .getElementById("test-download-events")
-    //     .addEventListener("click", async function () {
-    //         console.log(await calendar.download_events());
-    //         //console.log(await calendar.delete_calendar("c_8sor9sf4k3boaovnprlfcnm8sg@group.calendar.google.com"))
-    //         //const start = new Date('May 5, 2021 10:00:00')
-    //         //const end = new Date('May 5, 2021 10:00:00')
-    //         //const event = new GoogleCalendarEvent(start, end)
-    //         console.log(
-    //             await calendar.delete_event("0s9rcrri5k8ei9lt0r877itdhs")
-    //         );
-    //     });
-    //
 
     document
         .getElementById("oAuth")
         .addEventListener("click", async function () {
-            // await calendar.session.remove_token(await calendar.session.oauth_token())
-            console.log(await calendar.session.oauth_token());
-            // console.log(await calendar.create_calendar("AutoCal test 4"))
+            // await autocalendar.calendar.session.remove_token(await autocalendar.calendar.session.oauth_token())
+            console.log(await autocalendar.calendar.session.oauth_token());
         });
 
     document.getElementById("canvas").addEventListener("click", function () {
@@ -60,45 +100,15 @@ const init = () => {
                 return;
             }
 
-            console.log("Start syncing from " + service);
+            console.log("Started syncing from " + service);
             // Start loading animation
             show_loader();
 
-            let gcal_events: Array<GoogleCalendarEvent> = [];
             if (service === "canvas") {
-                const calendar_id = await calendar.create_calendar("Autocalendar Demo")
-                const events = await canvas.get_events();
-                const assignments = await canvas.get_assignments();
-
-                for (let [course, course_events] of events) {
-                    console.log(course);
-                    console.log(course_events);
-                    for(let event of course_events){
-                        //gcal_events.push(calendar.to_google_calendar_event(event));
-                        await calendar.create_event(calendar.to_google_calendar_event(event), calendar_id)
-                        console.log(event);
-                    }
-                }
-
-                for (let [course, course_assignments] of assignments) {
-                    console.log(course);
-                    console.log(course_assignments);
-                    // for(let event of course_assignments){
-                    //     gcal_events.push(calendar.to_google_calendar_event(event));
-                    // }
-                }
+                await autocalendar.sync_canvas("AutoCalendar Demo");
+                // console.log(await autocalendar.canvas.download_events());
+                // console.log(await autocalendar.canvas.download_assignments());
             }
-
-            // Uploading to google calendar
-            // let v = gcal_events.pop();
-            // console.log(v);
-            // await calendar.create_event(v, "c_klc037ff4133segl4tb21kpa6s@group.calendar.google.com");
-
-            // for(let event of gcal_events){
-            //     // remember to change the cal id to the cal you want to upload to.
-            //     await calendar.create_event(event, "c_klc037ff4133segl4tb21kpa6s@group.calendar.google.com")
-            //     console.log(event);
-            // }
 
             // Stop loading animation when calendar updates are done
             hide_loader();
@@ -106,8 +116,11 @@ const init = () => {
             // Clean up the page when sync process is done
             remove_icon_focus("canvas-icon", "canvas", "n-canvas");
             remove_sync_button_focus();
-            console.log("Finish syncing from " + service);
+            console.log("Finished syncing from " + service);
             service = null;
+
+            // Stop animation ...
+            console.log("Finish syncing from " + service);
         });
 };
 
@@ -124,25 +137,29 @@ const remove_icon_focus = (icon: string, service: string, s_name: string) => {
 };
 
 const add_sync_button_focus = () => {
-    document.getElementById("sync-button").style.border = "rgba(90, 24, 107, 0.6) solid 2px";
-    document.getElementById("sync-button").style.boxShadow = "1px 2px rgb(70, 24, 60, 0.85)";
+    document.getElementById("sync-button").style.border =
+        "rgba(90, 24, 107, 0.6) solid 2px";
+    document.getElementById("sync-button").style.boxShadow =
+        "1px 2px rgb(70, 24, 60, 0.85)";
     document.getElementById("sync-to-calendar").style.color = "rgb(60, 14, 50)";
 };
 
 const remove_sync_button_focus = () => {
     document.getElementById("sync-button").style.border = "#e0d6f5 solid 2px";
-    document.getElementById("sync-button").style.boxShadow = "1px 2px rgba(70, 24, 60, 0.4)";
-    document.getElementById("sync-to-calendar").style.color = "rgba(70, 24, 60, 0.5)";
+    document.getElementById("sync-button").style.boxShadow =
+        "1px 2px rgba(70, 24, 60, 0.4)";
+    document.getElementById("sync-to-calendar").style.color =
+        "rgba(70, 24, 60, 0.5)";
 };
 
 const show_loader = () => {
     document.getElementById("sync-to-calendar").style.display = "none";
     document.getElementById("loader").style.display = "block";
-}
+};
 
 const hide_loader = () => {
     document.getElementById("loader").style.display = "none";
     document.getElementById("sync-to-calendar").style.display = "block";
-}
+};
 
 init();

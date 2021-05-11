@@ -1,8 +1,4 @@
 import { Session } from "./session.js";
-import {CanvasAssignment} from "./canvas.js";
-import {CanvasEvent} from "./canvas.js";
-import {LockInfo} from "./canvas.js";
-import {EventAssignment} from "./canvas.js";
 
 export class GoogleOAuthSession extends Session {
     async oauth_token(): Promise<string> {
@@ -11,13 +7,15 @@ export class GoogleOAuthSession extends Session {
                 {
                     interactive: true,
                 },
-                (success) => resolve(success)
+                (token) => resolve(token)
             )
         );
     }
 
     async remove_token(token: string): Promise<void> {
-        return new Promise((resolve) => chrome.identity.removeCachedAuthToken({token: token}, resolve))
+        return new Promise((resolve) =>
+            chrome.identity.removeCachedAuthToken({ token: token }, resolve)
+        );
     }
 }
 
@@ -26,24 +24,24 @@ export enum CalendarTimeZone {
 }
 
 export class GoogleCalendarEvent {
-    summary: string;
-    description: string;
     start: Date;
     end: Date;
+    summary: string;
+    description: string;
     timezone: CalendarTimeZone;
 
     constructor(
         start: Date,
         end: Date,
-        timezone: CalendarTimeZone = CalendarTimeZone.US_LA,
         summary?: string,
-        description?: string
+        description?: string,
+        timezone: CalendarTimeZone = CalendarTimeZone.US_LA
     ) {
         this.start = start;
         this.end = end;
-        this.timezone = timezone;
         this.summary = summary;
         this.description = description;
+        this.timezone = timezone;
     }
 
     to_json(): string {
@@ -64,6 +62,8 @@ export class GoogleCalendarEvent {
 }
 
 export default class GoogleCalendar {
+    static readonly RATE_LIMIT: number = 10;
+
     session: GoogleOAuthSession;
 
     constructor() {
@@ -116,7 +116,7 @@ export default class GoogleCalendar {
             .post(url, { headers: headers, body: body })
             .then((resp) => resp.json());
 
-        return response.id
+        return response.id;
     }
 
     async delete_calendar(calendarId: string) {
@@ -124,33 +124,5 @@ export default class GoogleCalendar {
         const headers = await this.default_headers();
 
         await this.session.delete(url, { headers: headers });
-    }
-
-    to_google_calendar_event(event: CanvasEvent | CanvasAssignment): GoogleCalendarEvent{
-        let start = null;
-        let end = null;
-        let title = null;
-        let description = null;
-        if(event.type === 'event'){
-            title = event.title;
-            description = event.description;
-            start = new Date(event.start_at);
-            end = new Date(event.end_at);
-        }else if(event.type === 'assignment'){
-            //let assignment = <EventAssignment> event.assignment;
-            title = event.title;
-            description = event.html_url.concat(" ", event.description);
-            // if(assignment.due_at != null){
-            //     start = new Date(assignment.due_at);
-            //     end = new Date(assignment.due_at);
-            // }else{
-            //     start = new Date(assignment.lock_at);
-            //     end = new Date(assignment.lock_at);
-            // }
-            start = new Date(event.start_at);
-            end = new Date(event.end_at);
-
-        }
-        return new GoogleCalendarEvent(start, end, CalendarTimeZone.US_LA, title, description);
     }
 }
