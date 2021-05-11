@@ -60,8 +60,10 @@ const init = () => {
             }
 
             console.log("Start syncing from " + service);
-            let gcal_events: Array<GoogleCalendarEvent> = [];
+            // Start loading animation
+            show_loader();
 
+            let gcal_events: Array<GoogleCalendarEvent> = [];
             if (service === "canvas") {
                 const events = await canvas.get_events();
                 const assignments = await canvas.get_assignments();
@@ -94,6 +96,9 @@ const init = () => {
                 console.log(event);
             }
 
+            // Stop loading animation when calendar updates are done
+            hide_loader();
+
             // Clean up the page when sync process is done
             remove_icon_focus("canvas-icon", "canvas", "n-canvas");
             remove_sync_button_focus();
@@ -125,5 +130,15 @@ const remove_sync_button_focus = () => {
     document.getElementById("sync-button").style.boxShadow = "1px 2px rgba(70, 24, 60, 0.4)";
     document.getElementById("sync-to-calendar").style.color = "rgba(70, 24, 60, 0.5)";
 };
+
+const show_loader = () => {
+    document.getElementById("sync-to-calendar").style.display = "none";
+    document.getElementById("loader").style.display = "block";
+}
+
+const hide_loader = () => {
+    document.getElementById("loader").style.display = "none";
+    document.getElementById("sync-to-calendar").style.display = "block";
+}
 
 init();

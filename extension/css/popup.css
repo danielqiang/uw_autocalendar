@@ -164,5 +164,53 @@ div.icon-holder {
     font-weight: bold;
 }
 
+.loading {
+    display: none;
+    position: relative;
+    width: 27px;
+    height: 20px;
+}
+
+.loading div {
+    display: block;
+    position: absolute;
+    left: 6px;
+    width: 14px;
+    background: -webkit-linear-gradient(#e3c85d, #47228f);
+    animation: lds-facebook 1s cubic-bezier(0, 0.5, 0.5, 1) infinite;
+}
+
+.loading div:nth-child(1) {
+    left: 6px;
+    animation-delay: -0.2s;
+}
+
+.loading div:nth-child(2) {
+    left: 24px;
+    animation-delay: -0.1s;
+}
+
+.loading div:nth-child(3) {
+    left: 42px;
+    animation-delay: 0s;
+}
+
+@keyframes lds-facebook {
+    0% {
+        top: 6px;
+        height: 24px;
+    }
+    50%, 100% {
+        top: 9px;
+        height: 16px;
+    }
+}
+
+#loading-message {
+    color: rgb(70, 24, 60);
+    padding-left: 65px;
+}
+
+
 
 
