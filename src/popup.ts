@@ -15,7 +15,11 @@ class AutoCalendar {
     }
 
     async sync_canvas(calendar_name: string) {
-        const calendar_id = await this.calendar.create_calendar(calendar_name);
+        let calendar_id = await this.calendar.get_calendar_id(calendar_name);
+        if (calendar_id) {
+            await this.calendar.delete_calendar(calendar_id);
+        }
+        calendar_id = await this.calendar.create_calendar(calendar_name);
 
         let events: GoogleCalendarEvent[] = [];
 
@@ -46,7 +50,7 @@ class AutoCalendar {
         assignment: CanvasAssignmentEvent
     ): GoogleCalendarEvent {
         return new GoogleCalendarEvent(
-            new Date(assignment.assignment.unlock_at),
+            new Date(assignment.assignment.due_at),
             new Date(assignment.assignment.due_at),
             assignment.title,
             assignment.description
@@ -66,6 +70,7 @@ class AutoCalendar {
 }
 
 const init = () => {
+    const calendar_name = "AutoCalendar Demo";
     const autocalendar = new AutoCalendar();
 
     let service = null;
@@ -105,9 +110,7 @@ const init = () => {
             show_loader();
 
             if (service === "canvas") {
-                await autocalendar.sync_canvas("AutoCalendar Demo");
-                // console.log(await autocalendar.canvas.download_events());
-                // console.log(await autocalendar.canvas.download_assignments());
+                await autocalendar.sync_canvas(calendar_name);
             }
 
             // Stop loading animation when calendar updates are done
