@@ -77,7 +77,7 @@ export default class GoogleCalendar {
         });
     }
 
-    async download_events(calendarId: string = "primary"): Promise<any> {
+    async download_events(calendarId: string): Promise<any> {
         const url = `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`;
         const headers = await this.default_headers();
         return this.session
@@ -87,7 +87,7 @@ export default class GoogleCalendar {
 
     async create_event(
         event: GoogleCalendarEvent,
-        calendarId: string = "primary"
+        calendarId: string
     ): Promise<any> {
         const url = `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`;
         const headers = await this.default_headers();
@@ -98,7 +98,7 @@ export default class GoogleCalendar {
             .then((resp) => resp.json());
     }
 
-    async delete_event(eventId: string, calendarId: string = "primary") {
+    async delete_event(eventId: string, calendarId: string) {
         const url = `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${eventId}`;
         const headers = await this.default_headers();
 
