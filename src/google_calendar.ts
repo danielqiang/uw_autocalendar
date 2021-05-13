@@ -12,9 +12,9 @@ export class GoogleOAuthSession extends Session {
         );
     }
 
-    async remove_token(token: string): Promise<void> {
+    async clear_token_cache(): Promise<void> {
         return new Promise((resolve) =>
-            chrome.identity.removeCachedAuthToken({ token: token }, resolve)
+            chrome.identity.clearAllCachedAuthTokens(resolve)
         );
     }
 }
@@ -63,7 +63,7 @@ export class GoogleCalendarEvent {
 
 export default class GoogleCalendar {
     static readonly API_URL: string = "https://www.googleapis.com/calendar/v3";
-    static readonly RATE_LIMIT: number = 5;
+    static readonly RATE_LIMIT: number = 10;
 
     session: GoogleOAuthSession;
 
@@ -127,7 +127,7 @@ export default class GoogleCalendar {
         await this.session.delete(url, { headers: headers });
     }
 
-    async *iter_calendars(): AsyncGenerator<any, void, void> {
+    private async *iter_calendars(): AsyncGenerator<any, void, void> {
         let page_token = null;
         do {
             const params =

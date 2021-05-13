@@ -35,10 +35,13 @@ export function fetch_retry(
     exponential_delay: number = 500
 ) {
     // fetch with retries and exponential backoff
-    return fetch(url, init).then((resp) => {
+    return fetch(url, init).then(async function (resp) {
         if (resp.status >= 400 && retries > 0) {
-            console.log("retrying...");
-            return wait(exponential_delay).then(() =>
+            console.log(
+                `Request to ${resp.url} failed with status code ${resp.status}. Retrying...`
+            );
+
+            return await wait(exponential_delay).then(() =>
                 fetch_retry(url, init, retries - 1, exponential_delay * 2)
             );
         } else {
