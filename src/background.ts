@@ -1,7 +1,10 @@
-(async() => {
-    const AutoCalendar = (await import(chrome.extension.getURL("js/autocalendar.js"))).default
+(async () => {
+    const AutoCalendar = (
+        await import(chrome.extension.getURL("js/autocalendar.js"))
+    ).default;
 
-    const autocalendar = new AutoCalendar()
+    const calendar_name = "AutoCalendar Demo";
+    const autocalendar = new AutoCalendar();
 
     chrome.webRequest.onBeforeRequest.addListener(
         (details) => {
@@ -16,8 +19,7 @@
 
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (request.action === "sync_canvas") {
-            autocalendar.sync_canvas("AutoCalendar demo");
+            autocalendar.sync_canvas(calendar_name);
         }
     });
-})()
-
+})();

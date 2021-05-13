@@ -1,16 +1,10 @@
-import AutoCalendar from "./autocalendar.js";
-
 const init = () => {
-    const calendar_name = "AutoCalendar Demo";
-    const autocalendar = new AutoCalendar();
-
     let service = null;
 
     document
         .getElementById("oAuth")
         .addEventListener("click", async function () {
             // await autocalendar.calendar.session.remove_token(await autocalendar.calendar.session.oauth_token())
-            console.log(await autocalendar.calendar.session.oauth_token());
         });
 
     document.getElementById("canvas").addEventListener("click", function () {
