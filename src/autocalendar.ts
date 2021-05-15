@@ -39,9 +39,13 @@ export default class AutoCalendar {
             );
         }
 
+        let batched_events = [];
+        for (let i = 0; i <= events.length; i += GoogleCalendar.BATCH_SIZE) {
+            batched_events.push(events.slice(i, i + GoogleCalendar.BATCH_SIZE));
+        }
         await batch_await(
-            events,
-            (event) => this.calendar.create_event(event, calendar_id),
+            batched_events,
+            (batch) => this.calendar.create_events(batch, calendar_id),
             GoogleCalendar.RATE_LIMIT
         );
     }

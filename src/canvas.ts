@@ -21,7 +21,7 @@ export class CanvasSAMLSession extends Session {
         return true;
     }
 
-    private async saml_flow(callback: Function) {
+    private async saml_flow(callback: () => void) {
         const load_handler = function () {
             const observer = new MutationObserver(function (mutations) {
                 mutations.forEach(function (mutation) {

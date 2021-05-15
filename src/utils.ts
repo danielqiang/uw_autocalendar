@@ -12,7 +12,7 @@ export function sleep(ms) {
 
 export async function batch_await(
     items: any[],
-    to_promise: Function,
+    to_promise: (any) => Promise<any>,
     batch_size: number
 ) {
     for (let i = 0; i < items.length; i += batch_size) {
@@ -29,20 +29,20 @@ export function wait(ms) {
 }
 
 export function fetch_retry(
-    url: string,
+    input: RequestInfo,
     init?: RequestInit,
     retries: number = 3,
     exponential_delay: number = 500
 ) {
     // fetch with retries and exponential backoff
-    return fetch(url, init).then(async function (resp) {
+    return fetch(input, init).then(async function (resp) {
         if (resp.status >= 400 && retries > 0) {
             console.log(
                 `Request to ${resp.url} failed with status code ${resp.status}. Retrying...`
             );
 
             return await wait(exponential_delay).then(() =>
-                fetch_retry(url, init, retries - 1, exponential_delay * 2)
+                fetch_retry(input, init, retries - 1, exponential_delay * 2)
             );
         } else {
             return resp;

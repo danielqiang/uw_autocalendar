@@ -17,9 +17,11 @@
         { urls: ["<all_urls>"] }
     );
 
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-        if (request.action === "sync_canvas") {
-            autocalendar.sync_canvas(calendar_name);
+    chrome.runtime.onMessage.addListener(
+        async (request, sender, sendResponse) => {
+            if (request.action === "sync_canvas") {
+                await autocalendar.sync_canvas(calendar_name);
+            }
         }
-    });
+    );
 })();
