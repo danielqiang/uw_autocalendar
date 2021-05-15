@@ -178,6 +178,32 @@ export interface CanvasAssignment {
     anonymize_students: boolean;
     require_lockdown_browser: boolean;
 }
+// TODO: @Arik This is probably a good way of adding custom getters with specific logic;
+//  just make wrapper classes for the interfaces and add
+//  methods with the `get` modifier. Feel free to add whatever methods you need,
+//  I've added two that we will probably need as an example.
+
+export class CanvasAssignmentWrapper {
+    canvas_assignment: CanvasAssignment;
+
+    constructor(canvas_assignment: CanvasAssignment) {
+        this.canvas_assignment = canvas_assignment;
+    }
+
+    get due_date(): Date {
+        // TODO (example implementation, replace with what makes sense)
+        return new Date(
+            this.canvas_assignment.due_at ||
+                this.canvas_assignment.lock_at ||
+                this.canvas_assignment.unlock_at
+        );
+    }
+
+    get full_description(): string {
+        // TODO
+        return null;
+    }
+}
 
 enum CanvasEventType {
     ASSIGNMENT = "assignment",

@@ -40,7 +40,7 @@ export default class AutoCalendar {
         }
 
         let batched_events = [];
-        for (let i = 0; i <= events.length; i += GoogleCalendar.BATCH_SIZE) {
+        for (let i = 0; i < events.length; i += GoogleCalendar.BATCH_SIZE) {
             batched_events.push(events.slice(i, i + GoogleCalendar.BATCH_SIZE));
         }
         await batch_await(
