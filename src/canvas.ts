@@ -46,22 +46,23 @@ export class CanvasSAMLSession extends Session {
 
     async request(
         method: HTTPMethod,
-        url: string,
+        input: RequestInfo,
         init?: RequestInit
     ): Promise<Response> {
-        const response = await super.request(method, url, init);
-        return response;
+        // return response;
 
         // TODO: The auth flow should look something more like this, i.e. when an API call fails,
         //  we authenticate (authenticate() should "block" until authentication is complete) then
         //  retry the request. For now, request() just calls super.request().
 
-        // if (response.status >= 400) {
-        //     await this.authenticate();
-        //     return super.request(method, url, init);
-        // } else {
-        //     return response;
-        // }
+        const response = await super.request(method, input, init);
+
+        if (response.status >= 400) {
+            await this.authenticate();
+            return super.request(method, input, init);
+        } else {
+            return response;
+        }
     }
 }
 
@@ -305,10 +306,6 @@ export default class Canvas {
     private async download_calendar_events(
         event_type: CanvasEventType
     ): Promise<Map<string, any[]>> {
-        if (!(await this.session.is_authenticated())) {
-            await this.session.authenticate();
-        }
-
         let events = new Map();
         let courses = await this.courses();
 

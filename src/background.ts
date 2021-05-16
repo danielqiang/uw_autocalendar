@@ -20,9 +20,10 @@
     chrome.runtime.onMessage.addListener(
         async (request, sender, sendResponse) => {
             if (request.action === "sync_canvas") {
-                console.time("sync_canvas");
-                await autocalendar.sync_canvas(calendar_name);
-                console.timeEnd("sync_canvas");
+                // console.time("sync_canvas");
+                // await autocalendar.sync_canvas(calendar_name);
+                // console.timeEnd("sync_canvas");
+                await autocalendar.calendar.clear_calendar(await autocalendar.calendar.get_calendar_id(calendar_name))
             }
         }
     );
