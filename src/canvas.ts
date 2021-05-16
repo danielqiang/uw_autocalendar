@@ -205,6 +205,51 @@ export class CanvasAssignmentWrapper {
     }
 }
 
+export interface CanvasCourse {
+    id: number;
+    name: string;
+    account_id: number;
+    uuid: string;
+    start_at: string;
+    grading_standard_id?: any;
+    is_public: boolean;
+    created_at: string;
+    course_code: string;
+    default_view: string;
+    root_account_id: number;
+    enrollment_term_id: number;
+    license: string;
+    grade_passback_setting?: any;
+    end_at: string;
+    public_syllabus: boolean;
+    public_syllabus_to_auth: boolean;
+    storage_quota_mb: number;
+    is_public_to_auth_users: boolean;
+    homeroom_course: boolean;
+    course_color?: any;
+    apply_assignment_group_weights: boolean;
+    calendar: CanvasCourseCalendar;
+    time_zone: string;
+    blueprint: boolean;
+    template: boolean;
+    enrollments?: CanvasEnrollmentsEntity[];
+    hide_final_grades: boolean;
+    workflow_state: string;
+    restrict_enrollments_to_course_dates: boolean;
+    overridden_course_visibility: string;
+}
+export interface CanvasCourseCalendar {
+    ics: string;
+}
+export interface CanvasEnrollmentsEntity {
+    type: string;
+    role: string;
+    role_id: number;
+    user_id: number;
+    enrollment_state: string;
+    limit_privileges_to_course_section: boolean;
+}
+
 enum CanvasEventType {
     ASSIGNMENT = "assignment",
     EVENT = "event",
@@ -215,13 +260,14 @@ export default class Canvas {
     static readonly API_URL: string = "https://canvas.uw.edu/api/v1";
 
     private session: CanvasSAMLSession;
+    private _courses: CanvasCourse[];
     private _user_id: number;
 
     constructor() {
         this.session = new CanvasSAMLSession();
     }
 
-    async get_user_id(): Promise<number> {
+    async user_id(): Promise<number> {
         if (this._user_id === undefined) {
             const url = Canvas.API_URL + "/users/self?include=[id]";
             const user_id = await this.session
@@ -231,6 +277,17 @@ export default class Canvas {
             this._user_id = user_id;
         }
         return this._user_id;
+    }
+
+    async courses(): Promise<any[]> {
+        if (this._courses === undefined) {
+            const courses_url = `${Canvas.API_URL}/courses`;
+            const courses = await this.session
+                .get(courses_url)
+                .then((r) => r.json());
+            this._courses = courses;
+        }
+        return this._courses;
     }
 
     async download_events(): Promise<Map<string, CanvasCalendarEvent[]>> {
@@ -250,12 +307,8 @@ export default class Canvas {
             await this.session.authenticate();
         }
 
-        const courses_url = `${Canvas.API_URL}/courses`;
-        const courses = await this.session
-            .get(courses_url)
-            .then((r) => r.json());
-
         let events = new Map();
+        let courses = await this.courses();
 
         await batch_await(
             courses,
@@ -275,9 +328,10 @@ export default class Canvas {
     ): Promise<any> {
         const params = new URLSearchParams([
             ["type", event_type],
-            ["context_codes[]", `user_${await this.get_user_id()}`],
+            ["context_codes[]", `user_${await this.user_id()}`],
             ["context_codes[]", `course_${course_id}`],
             ["all_events", "true"],
+            ["per_page", `${Number.MAX_SAFE_INTEGER}`]
         ]);
         const url = `${Canvas.API_URL}/calendar_events?${params}`;
 
