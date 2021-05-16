@@ -21,19 +21,22 @@ export default class AutoCalendar {
         }
         calendar_id = await this.calendar.create_calendar(calendar_name);
 
+        const results = await Promise.all([
+            this.canvas.download_events(),
+            this.canvas.download_assignments(),
+        ]);
+        const canvas_course_events = results[0];
+        const canvas_course_assignments = results[1];
+
         let events: GoogleCalendarEvent[] = [];
 
-        for (const course_events of (
-            await this.canvas.download_events()
-        ).values()) {
+        for (const course_events of canvas_course_events.values()) {
             course_events.forEach((e) =>
                 events.push(this.event_to_calendar_event(e))
             );
         }
 
-        for (const course_assignments of (
-            await this.canvas.download_assignments()
-        ).values()) {
+        for (const course_assignments of canvas_course_assignments.values()) {
             course_assignments.forEach((e) =>
                 events.push(this.assignment_to_calendar_event(e))
             );

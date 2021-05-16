@@ -256,10 +256,12 @@ enum CanvasEventType {
 }
 
 export default class Canvas {
-    static readonly RATE_LIMIT: number = 10;
+    static readonly RATE_LIMIT: number = 50;
     static readonly API_URL: string = "https://canvas.uw.edu/api/v1";
 
     private session: CanvasSAMLSession;
+
+    // Cache fields
     private _courses: CanvasCourse[];
     private _user_id: number;
 
@@ -331,7 +333,7 @@ export default class Canvas {
             ["context_codes[]", `user_${await this.user_id()}`],
             ["context_codes[]", `course_${course_id}`],
             ["all_events", "true"],
-            ["per_page", `${Number.MAX_SAFE_INTEGER}`]
+            ["per_page", `${Number.MAX_SAFE_INTEGER}`],
         ]);
         const url = `${Canvas.API_URL}/calendar_events?${params}`;
 
