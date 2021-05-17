@@ -12,7 +12,7 @@ export class Session {
         input: RequestInfo,
         init?: RequestInit
     ): Promise<Response> {
-        return fetch_retry(input, { method: method, ...init });
+        return fetch(input, { method: method, ...init });
     }
 
     async get(input: RequestInfo, init?: RequestInit): Promise<Response> {
