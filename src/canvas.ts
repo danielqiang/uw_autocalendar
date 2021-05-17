@@ -2,46 +2,35 @@ import { HTTPMethod, Session } from "./session.js";
 import { batch_await } from "./utils.js";
 
 export class CanvasSAMLSession extends Session {
-    async is_authenticated(): Promise<boolean> {
-        const url = `${Canvas.API_URL}/courses`;
-        const response = await this.get(url);
-        return response.status === 200;
+    is_authenticating: boolean;
+
+    async authenticate(callback: () => Promise<Response>): Promise<Promise<Response>> {
+        // Only allow one failed request to open up a Canvas tab.
+        if (!this.is_authenticating) {
+            this.is_authenticating = true;
+            window.open("https://apps.canvas.uw.edu/wayf");
+        }
+        return this.saml_flow(callback);
     }
 
-    async authenticate(): Promise<boolean> {
-        // Should be synchronous with a provided callback. The `return Promise(..., onSuccess=...)`
-        // pattern is what transforms it into an async flow, but the
-        // authentication block itself is synchronous.
-
-        // return new Promise((resolve) => {
-        //     this.saml_flow(resolve);
-        // });
-
-        window.open("https://apps.canvas.uw.edu/wayf");
-        return true;
-    }
-
-    private async saml_flow(callback: () => void) {
-        const load_handler = function () {
-            const observer = new MutationObserver(function (mutations) {
-                mutations.forEach(function (mutation) {
-                    if (
-                        document.location.href.startsWith(
-                            "https://canvas.uw.edu"
-                        )
-                    ) {
-                        window.removeEventListener("load", load_handler);
-                        callback();
+    private async saml_flow(callback: () => Promise<Response>): Promise<Promise<Response>> {
+        // Listen for Canvas authentication to complete before resolving the given callback.
+        return new Promise((resolve) => {
+            chrome.webRequest.onBeforeRequest.addListener(
+                (details) => {
+                    if (details.url.startsWith("https://sso.canvaslms.com")) {
+                        if (this.is_authenticating) {
+                            chrome.tabs.query({ active: true }, function (tabs) {
+                                chrome.tabs.remove(tabs[0].id);
+                            });
+                        }
+                        this.is_authenticating = false;
+                        resolve(callback());
                     }
-                });
-            });
-            observer.observe(document.querySelector("body"), {
-                childList: true,
-                subtree: true,
-            });
-        };
-        window.addEventListener("load", load_handler);
-        window.open("https://apps.canvas.uw.edu/wayf");
+                },
+                { urls: ["<all_urls>"] }
+            );
+        });
     }
 
     async request(
@@ -50,18 +39,15 @@ export class CanvasSAMLSession extends Session {
         init?: RequestInit
     ): Promise<Response> {
         const response = await super.request(method, url, init);
-        return response;
 
-        // TODO: The auth flow should look something more like this, i.e. when an API call fails,
-        //  we authenticate (authenticate() should "block" until authentication is complete) then
-        //  retry the request. For now, request() just calls super.request().
-
-        // if (response.status >= 400) {
-        //     await this.authenticate();
-        //     return super.request(method, url, init);
-        // } else {
-        //     return response;
-        // }
+        if (response.status == 401) {
+            // Authenticate with a retry of the request as the callback.
+            return await this.authenticate(() => {
+                return super.request(method, url, init);
+            });
+        } else {
+            return response;
+        }
     }
 }
 
@@ -355,10 +341,6 @@ export default class Canvas {
     private async download_calendar_events(
         event_type: CanvasEventType
     ): Promise<Map<string, any[]>> {
-        if (!(await this.session.is_authenticated())) {
-            await this.session.authenticate();
-        }
-
         let events = new Map();
         let courses = await this.courses();
 

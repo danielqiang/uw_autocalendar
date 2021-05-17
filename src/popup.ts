@@ -4,7 +4,7 @@ const init = () => {
     document
         .getElementById("oAuth")
         .addEventListener("click", async function () {
-            // await autocalendar.calendar.session.remove_token(await autocalendar.calendar.session.oauth_token())
+            chrome.runtime.sendMessage({ action: "oauth" });
         });
 
     document.getElementById("canvas").addEventListener("click", function () {
