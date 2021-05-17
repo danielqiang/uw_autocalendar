@@ -366,16 +366,24 @@ export default class Canvas {
             ["context_codes[]", `user_${await this.user_id()}`],
             ["context_codes[]", `course_${course_id}`],
             ["all_events", "true"],
-            ["per_page", `${Number.MAX_SAFE_INTEGER}`],
+            ["per_page", "100"],
         ]);
-        const url = `${Canvas.API_URL}/calendar_events?${params}`;
 
-        const course_events = await this.session.get(url).then((r) => r.json());
-
-        if (Array.isArray(course_events)) {
-            return course_events;
-        } else {
-            return []
+        let course_events = [];
+        let page_num = 1;
+        let more_events = true;
+        while (more_events) {
+            params.set("page", String(page_num));
+            let url = `${Canvas.API_URL}/calendar_events?${params}`;
+            const resp = await this.session.get(url).then((r) => r.json());
+            if (Array.isArray(resp) && resp.length > 0) {
+                course_events = course_events.concat(resp);
+            } else {
+                more_events = false;
+            }
+            page_num += 1;
         }
+
+        return course_events;
     }
 }
