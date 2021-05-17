@@ -283,10 +283,14 @@ export default class Canvas {
 
     async courses(): Promise<any[]> {
         if (this._courses === undefined) {
-            const courses_url = `${Canvas.API_URL}/courses`;
+            const params = new URLSearchParams({
+                per_page: `${Number.MAX_SAFE_INTEGER}`,
+            });
+            const courses_url = `${Canvas.API_URL}/courses?${params}`;
             const courses = await this.session
                 .get(courses_url)
-                .then((r) => r.json());
+                .then((r) => r.json())
+                .then(courses => courses.filter(course => course.access_restricted_by_date !== true))
             this._courses = courses;
         }
         return this._courses;
@@ -321,13 +325,14 @@ export default class Canvas {
                 ),
             Canvas.RATE_LIMIT
         );
+
         return events;
     }
 
     private async download_course_events(
         event_type: CanvasEventType,
         course_id: number
-    ): Promise<any> {
+    ): Promise<any[]> {
         const params = new URLSearchParams([
             ["type", event_type],
             ["context_codes[]", `user_${await this.user_id()}`],
@@ -338,6 +343,11 @@ export default class Canvas {
         const url = `${Canvas.API_URL}/calendar_events?${params}`;
 
         const course_events = await this.session.get(url).then((r) => r.json());
-        return course_events;
+
+        if (Array.isArray(course_events)) {
+            return course_events;
+        } else {
+            return []
+        }
     }
 }

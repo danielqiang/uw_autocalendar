@@ -28,7 +28,7 @@
   },
   "permissions": [
     "identity",
-    "https://www.googleapis.com/*",
+    "https://www.googleapis.com/auth/calendar",
     "https://canvas.uw.edu/api/*",
     "webRequest",
     "<all_urls>"
