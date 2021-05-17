@@ -178,30 +178,76 @@ export interface CanvasAssignment {
     anonymize_students: boolean;
     require_lockdown_browser: boolean;
 }
-// TODO: @Arik This is probably a good way of adding custom getters with specific logic;
-//  just make wrapper classes for the interfaces and add
-//  methods with the `get` modifier. Feel free to add whatever methods you need,
-//  I've added two that we will probably need as an example.
 
 export class CanvasAssignmentWrapper {
     canvas_assignment: CanvasAssignment;
+    canvas_general_infos: CanvasAssignmentEvent;
 
-    constructor(canvas_assignment: CanvasAssignment) {
-        this.canvas_assignment = canvas_assignment;
+    constructor(canvas_assignment: CanvasAssignmentEvent) {
+        this.canvas_general_infos = canvas_assignment;
+        this.canvas_assignment = canvas_assignment.assignment;
     }
 
     get due_date(): Date {
-        // TODO (example implementation, replace with what makes sense)
         return new Date(
+            //checks in order: Assignment due date, Assignment lock date,
+            // Course Assignment due date, Course Assignment lock date
             this.canvas_assignment.due_at ||
                 this.canvas_assignment.lock_at ||
-                this.canvas_assignment.unlock_at
+                this.canvas_general_infos.end_at
         );
     }
+    /** Returns short description of a canvas assignment with the specified format
+     *  @returns: String of pattern COURSE NAME CODE: Assignment Name.
+     * */
+    get title(): string {
+        let desc = "";
+        //Lets start by getting the course name and a colon
+        if (this.canvas_general_infos.context_name){
+            desc += "" + this.canvas_general_infos.context_name.split(":")[0].split("-")[0].toLowerCase().trim();
+        } else if (this.canvas_assignment.course_id){
+            // TODO Is there a way to look up our course ID's? We know which course is assigned which ID when we look them up in the calendar, that was moved to utils.ts though
+        } else {
+            console.log("ERROR");
+            desc += "COURSE MISSING";
+        }
+        let comparison = desc.split(" ");
+        //adding brackets later so it doesnt mess up our comparison array used to delete duplicate words like "chem"
+        desc += "] : ";
+        desc = "[" + desc
+        //lets now get the assignment name and remove duplicate words from the course name
+        if(this.canvas_assignment.name){
+            let cleaned_name = this.canvas_assignment.name.toLowerCase()
+                .split(" ").filter(e => !comparison.includes(e)).join(" ")
+            desc+= cleaned_name;
+        } else if (this.canvas_general_infos.title){
+            let cleaned_name = this.canvas_general_infos.title.toLowerCase()
+                .split(" ").filter(e => !comparison.includes(e)).join(" ")
+            desc += cleaned_name;
+        } else {
+            console.log("ERROR");
+            desc += "Assignment Name Unknown";
+        }
+        return desc
+    }
 
+    /**
+     * Will return a string of format assignment description \n canvas URL to the assignment itself.
+     */
     get full_description(): string {
-        // TODO
-        return null;
+        let desc = "";
+        if(this.canvas_general_infos.description){
+            desc+=this.canvas_general_infos.description;
+        } else if (this.canvas_assignment.description){
+            desc+=this.canvas_assignment.description;
+        }
+        if(desc){
+            desc+="\n"
+        }
+        if (this.canvas_assignment.html_url){
+            desc += this.canvas_assignment.html_url;
+        }
+        return desc
     }
 }
 
