@@ -2,46 +2,35 @@ import { HTTPMethod, Session } from "./session.js";
 import { batch_await } from "./utils.js";
 
 export class CanvasSAMLSession extends Session {
-    async is_authenticated(): Promise<boolean> {
-        const url = `${Canvas.API_URL}/courses`;
-        const response = await this.get(url);
-        return response.status === 200;
+    is_authenticating: boolean;
+
+    async authenticate(callback: () => Promise<Response>): Promise<Promise<Response>> {
+        // Only allow one failed request to open up a Canvas tab.
+        if (!this.is_authenticating) {
+            this.is_authenticating = true;
+            window.open("https://apps.canvas.uw.edu/wayf");
+        }
+        return this.saml_flow(callback);
     }
 
-    async authenticate(): Promise<boolean> {
-        // Should be synchronous with a provided callback. The `return Promise(..., onSuccess=...)`
-        // pattern is what transforms it into an async flow, but the
-        // authentication block itself is synchronous.
-
-        // return new Promise((resolve) => {
-        //     this.saml_flow(resolve);
-        // });
-
-        window.open("https://apps.canvas.uw.edu/wayf");
-        return true;
-    }
-
-    private async saml_flow(callback: Function) {
-        const load_handler = function () {
-            const observer = new MutationObserver(function (mutations) {
-                mutations.forEach(function (mutation) {
-                    if (
-                        document.location.href.startsWith(
-                            "https://canvas.uw.edu"
-                        )
-                    ) {
-                        window.removeEventListener("load", load_handler);
-                        callback();
+    private async saml_flow(callback: () => Promise<Response>): Promise<Promise<Response>> {
+        // Listen for Canvas authentication to complete before resolving the given callback.
+        return new Promise((resolve) => {
+            chrome.webRequest.onBeforeRequest.addListener(
+                (details) => {
+                    if (details.url.startsWith("https://sso.canvaslms.com")) {
+                        if (this.is_authenticating) {
+                            chrome.tabs.query({ active: true }, function (tabs) {
+                                chrome.tabs.remove(tabs[0].id);
+                            });
+                        }
+                        this.is_authenticating = false;
+                        resolve(callback());
                     }
-                });
-            });
-            observer.observe(document.querySelector("body"), {
-                childList: true,
-                subtree: true,
-            });
-        };
-        window.addEventListener("load", load_handler);
-        window.open("https://apps.canvas.uw.edu/wayf");
+                },
+                { urls: ["<all_urls>"] }
+            );
+        });
     }
 
     async request(
@@ -50,18 +39,15 @@ export class CanvasSAMLSession extends Session {
         init?: RequestInit
     ): Promise<Response> {
         const response = await super.request(method, url, init);
-        return response;
 
-        // TODO: The auth flow should look something more like this, i.e. when an API call fails,
-        //  we authenticate (authenticate() should "block" until authentication is complete) then
-        //  retry the request. For now, request() just calls super.request().
-
-        // if (response.status >= 400) {
-        //     await this.authenticate();
-        //     return super.request(method, url, init);
-        // } else {
-        //     return response;
-        // }
+        if (response.status == 401) {
+            // Authenticate with a retry of the request as the callback.
+            return await this.authenticate(() => {
+                return super.request(method, url, init);
+            });
+        } else {
+            return response;
+        }
     }
 }
 
@@ -179,23 +165,143 @@ export interface CanvasAssignment {
     require_lockdown_browser: boolean;
 }
 
+export class CanvasAssignmentWrapper {
+    canvas_assignment: CanvasAssignment;
+    canvas_general_infos: CanvasAssignmentEvent;
+
+    constructor(canvas_assignment: CanvasAssignmentEvent) {
+        this.canvas_general_infos = canvas_assignment;
+        this.canvas_assignment = canvas_assignment.assignment;
+    }
+
+    get due_date(): Date {
+        return new Date(
+            //checks in order: Assignment due date, Assignment lock date,
+            // Course Assignment due date, Course Assignment lock date
+            this.canvas_assignment.due_at ||
+                this.canvas_assignment.lock_at ||
+                this.canvas_general_infos.end_at
+        );
+    }
+    /** Returns short description of a canvas assignment with the specified format
+     *  @returns: String of pattern COURSE NAME CODE: Assignment Name.
+     * */
+    get title(): string {
+        let desc = "";
+        //Lets start by getting the course name and a colon
+        if (this.canvas_general_infos.context_name){
+            desc += "" + this.canvas_general_infos.context_name.split(":")[0].split("-")[0].toLowerCase().trim();
+        } else if (this.canvas_assignment.course_id){
+            // TODO Is there a way to look up our course ID's? We know which course is assigned which ID when we look them up in the calendar, that was moved to utils.ts though
+        } else {
+            console.log("ERROR");
+            desc += "COURSE MISSING";
+        }
+        let comparison = desc.split(" ");
+        //adding brackets later so it doesnt mess up our comparison array used to delete duplicate words like "chem"
+        desc += "] : ";
+        desc = "[" + desc
+        //lets now get the assignment name and remove duplicate words from the course name
+        if(this.canvas_assignment.name){
+            let cleaned_name = this.canvas_assignment.name.toLowerCase()
+                .split(" ").filter(e => !comparison.includes(e)).join(" ")
+            desc+= cleaned_name;
+        } else if (this.canvas_general_infos.title){
+            let cleaned_name = this.canvas_general_infos.title.toLowerCase()
+                .split(" ").filter(e => !comparison.includes(e)).join(" ")
+            desc += cleaned_name;
+        } else {
+            console.log("ERROR");
+            desc += "Assignment Name Unknown";
+        }
+        return desc
+    }
+
+    /**
+     * Will return a string of format assignment description \n canvas URL to the assignment itself.
+     */
+    get full_description(): string {
+        let desc = "";
+        if(this.canvas_general_infos.description){
+            desc+=this.canvas_general_infos.description;
+        } else if (this.canvas_assignment.description){
+            desc+=this.canvas_assignment.description;
+        }
+        if(desc){
+            desc+="\n"
+        }
+        if (this.canvas_assignment.html_url){
+            desc += this.canvas_assignment.html_url;
+        }
+        return desc
+    }
+}
+
+export interface CanvasCourse {
+    id: number;
+    name: string;
+    account_id: number;
+    uuid: string;
+    start_at: string;
+    grading_standard_id?: any;
+    is_public: boolean;
+    created_at: string;
+    course_code: string;
+    default_view: string;
+    root_account_id: number;
+    enrollment_term_id: number;
+    license: string;
+    grade_passback_setting?: any;
+    end_at: string;
+    public_syllabus: boolean;
+    public_syllabus_to_auth: boolean;
+    storage_quota_mb: number;
+    is_public_to_auth_users: boolean;
+    homeroom_course: boolean;
+    course_color?: any;
+    apply_assignment_group_weights: boolean;
+    calendar: CanvasCourseCalendar;
+    time_zone: string;
+    blueprint: boolean;
+    template: boolean;
+    enrollments?: CanvasEnrollmentsEntity[];
+    hide_final_grades: boolean;
+    workflow_state: string;
+    restrict_enrollments_to_course_dates: boolean;
+    overridden_course_visibility: string;
+}
+export interface CanvasCourseCalendar {
+    ics: string;
+}
+export interface CanvasEnrollmentsEntity {
+    type: string;
+    role: string;
+    role_id: number;
+    user_id: number;
+    enrollment_state: string;
+    limit_privileges_to_course_section: boolean;
+}
+
 enum CanvasEventType {
     ASSIGNMENT = "assignment",
     EVENT = "event",
 }
 
 export default class Canvas {
-    static readonly RATE_LIMIT: number = 10;
+    static readonly RATE_LIMIT: number = 50;
     static readonly API_URL: string = "https://canvas.uw.edu/api/v1";
 
     private session: CanvasSAMLSession;
+
+    // Cache fields
+    private _courses: CanvasCourse[];
     private _user_id: number;
 
     constructor() {
         this.session = new CanvasSAMLSession();
     }
 
-    async get_user_id(): Promise<number> {
+    async user_id(): Promise<number> {
         if (this._user_id === undefined) {
             const url = Canvas.API_URL + "/users/self?include=[id]";
             const user_id = await this.session
@@ -205,6 +311,21 @@ export default class Canvas {
             this._user_id = user_id;
         }
         return this._user_id;
+    }
+
+    async courses(): Promise<any[]> {
+        if (this._courses === undefined) {
+            const params = new URLSearchParams({
+                per_page: `${Number.MAX_SAFE_INTEGER}`,
+            });
+            const courses_url = `${Canvas.API_URL}/courses?${params}`;
+            const courses = await this.session
+                .get(courses_url)
+                .then((r) => r.json())
+                .then(courses => courses.filter(course => course.access_restricted_by_date !== true))
+            this._courses = courses;
+        }
+        return this._courses;
     }
 
     async download_events(): Promise<Map<string, CanvasCalendarEvent[]>> {
@@ -220,16 +341,8 @@ export default class Canvas {
     private async download_calendar_events(
         event_type: CanvasEventType
     ): Promise<Map<string, any[]>> {
-        if (!(await this.session.is_authenticated())) {
-            await this.session.authenticate();
-        }
-
-        const courses_url = `${Canvas.API_URL}/courses`;
-        const courses = await this.session
-            .get(courses_url)
-            .then((r) => r.json());
-
         let events = new Map();
+        let courses = await this.courses();
 
         await batch_await(
             courses,
@@ -240,22 +353,37 @@ export default class Canvas {
                 ),
             Canvas.RATE_LIMIT
         );
+
         return events;
     }
 
     private async download_course_events(
         event_type: CanvasEventType,
         course_id: number
-    ): Promise<any> {
+    ): Promise<any[]> {
         const params = new URLSearchParams([
             ["type", event_type],
-            ["context_codes[]", `user_${await this.get_user_id()}`],
+            ["context_codes[]", `user_${await this.user_id()}`],
             ["context_codes[]", `course_${course_id}`],
             ["all_events", "true"],
+            ["per_page", "100"],
         ]);
-        const url = `${Canvas.API_URL}/calendar_events?${params}`;
 
-        const course_events = await this.session.get(url).then((r) => r.json());
+        let course_events = [];
+        let page_num = 1;
+        let more_events = true;
+        while (more_events) {
+            params.set("page", String(page_num));
+            let url = `${Canvas.API_URL}/calendar_events?${params}`;
+            const resp = await this.session.get(url).then((r) => r.json());
+            if (Array.isArray(resp) && resp.length > 0) {
+                course_events = course_events.concat(resp);
+            } else {
+                more_events = false;
+            }
+            page_num += 1;
+        }
+
         return course_events;
     }
 }

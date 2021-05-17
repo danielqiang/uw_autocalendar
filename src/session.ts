@@ -9,21 +9,21 @@ export enum HTTPMethod {
 export class Session {
     async request(
         method: HTTPMethod,
-        url: string,
+        input: RequestInfo,
         init?: RequestInit
     ): Promise<Response> {
-        return fetch_retry(url, { method: method, ...init });
+        return fetch(input, { method: method, ...init });
     }
 
-    async get(url: string, init?: RequestInit): Promise<Response> {
-        return this.request(HTTPMethod.GET, url, init);
+    async get(input: RequestInfo, init?: RequestInit): Promise<Response> {
+        return this.request(HTTPMethod.GET, input, init);
     }
 
-    async post(url: string, init?: RequestInit): Promise<Response> {
-        return this.request(HTTPMethod.POST, url, init);
+    async post(input: RequestInfo, init?: RequestInit): Promise<Response> {
+        return this.request(HTTPMethod.POST, input, init);
     }
 
-    async delete(url: string, init?: RequestInit): Promise<Response> {
-        return this.request(HTTPMethod.DELETE, url, init);
+    async delete(input: RequestInfo, init?: RequestInit): Promise<Response> {
+        return this.request(HTTPMethod.DELETE, input, init);
     }
 }

@@ -1,6 +1,6 @@
 import GoogleCalendar, { GoogleCalendarEvent } from "./google_calendar.js";
 import Canvas, {
-    CanvasAssignmentEvent,
+    CanvasAssignmentEvent, CanvasAssignmentWrapper,
     CanvasCalendarEvent,
 } from "./canvas.js";
 import { batch_await } from "./utils.js";
@@ -15,33 +15,40 @@ export default class AutoCalendar {
     }
 
     async sync_canvas(calendar_name: string) {
-        let calendar_id = await this.calendar.get_calendar_id(calendar_name);
-        if (calendar_id) {
-            await this.calendar.delete_calendar(calendar_id);
-        }
-        calendar_id = await this.calendar.create_calendar(calendar_name);
+        // let calendar_id = await this.calendar.get_calendar_id(calendar_name);
+        // if (calendar_id) {
+        //     await this.calendar.delete_calendar(calendar_id);
+        // }
+        let calendar_id = await this.calendar.create_calendar(calendar_name);
+
+        const results = await Promise.all([
+            this.canvas.download_events(),
+            this.canvas.download_assignments(),
+        ]);
+        const canvas_course_events = results[0];
+        const canvas_course_assignments = results[1];
 
         let events: GoogleCalendarEvent[] = [];
 
-        for (const course_events of (
-            await this.canvas.download_events()
-        ).values()) {
+        for (const course_events of canvas_course_events.values()) {
             course_events.forEach((e) =>
                 events.push(this.event_to_calendar_event(e))
             );
         }
 
-        for (const course_assignments of (
-            await this.canvas.download_assignments()
-        ).values()) {
+        for (const course_assignments of canvas_course_assignments.values()) {
             course_assignments.forEach((e) =>
                 events.push(this.assignment_to_calendar_event(e))
             );
         }
 
+        let batched_events = [];
+        for (let i = 0; i < events.length; i += GoogleCalendar.BATCH_SIZE) {
+            batched_events.push(events.slice(i, i + GoogleCalendar.BATCH_SIZE));
+        }
         await batch_await(
-            events,
-            (event) => this.calendar.create_event(event, calendar_id),
+            batched_events,
+            (batch) => this.calendar.create_events(batch, calendar_id),
             GoogleCalendar.RATE_LIMIT
         );
     }
@@ -49,11 +56,12 @@ export default class AutoCalendar {
     private assignment_to_calendar_event(
         assignment: CanvasAssignmentEvent
     ): GoogleCalendarEvent {
+        let wrapper = new CanvasAssignmentWrapper(assignment)
         return new GoogleCalendarEvent(
-            new Date(assignment.assignment.due_at),
-            new Date(assignment.assignment.due_at),
-            assignment.title,
-            assignment.description
+            wrapper.due_date,
+            wrapper.due_date,
+            wrapper.title,
+            wrapper.full_description
         );
     }
 

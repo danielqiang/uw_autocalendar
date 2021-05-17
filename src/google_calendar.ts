@@ -1,4 +1,61 @@
-import { Session } from "./session.js";
+import { HTTPMethod, Session } from "./session.js";
+
+export class BatchRequest {
+    url: string;
+    init: RequestInit;
+    private readonly body_relative_urls: string[];
+    private readonly body_requests: Request[];
+
+    private readonly BATCH_BOUNDARY = "boundary";
+    private readonly BATCH_DELIMITER = "\r\n";
+
+    constructor(url: string, init: RequestInit = {}) {
+        init.headers = new Headers(init.headers);
+        init.headers.set(
+            "Content-Type",
+            `multipart/mixed; boundary=${this.BATCH_BOUNDARY}`
+        );
+
+        this.url = url;
+        this.init = init;
+        this.body_relative_urls = [];
+        this.body_requests = [];
+    }
+
+    add(relative_url: string, request: Request) {
+        this.body_relative_urls.push(relative_url);
+        this.body_requests.push(request);
+    }
+
+    async build(): Promise<Request> {
+        let raw_requests: string[] = [];
+
+        for (let i = 0; i < this.body_requests.length; i++) {
+            const relative_url = this.body_relative_urls[i];
+            const request = this.body_requests[i];
+            const raw_request = [
+                `Content-Type: application/json`,
+                `Content-ID: ${i}`,
+                ``,
+                `${request.method} ${relative_url}`,
+                ``,
+                `${await request.text()}`,
+                ``,
+            ].join(this.BATCH_DELIMITER);
+            raw_requests.push(raw_request);
+        }
+        // add prefix/suffix boundaries to body as well
+        raw_requests = ["", ...raw_requests, this.BATCH_DELIMITER];
+
+        const body = raw_requests.join(
+            `${this.BATCH_DELIMITER}--${this.BATCH_BOUNDARY}${this.BATCH_DELIMITER}`
+        );
+        return new Request(this.url, {
+            ...this.init,
+            body: body,
+        });
+    }
+}
 
 export class GoogleOAuthSession extends Session {
     async oauth_token(): Promise<string> {
@@ -44,7 +101,7 @@ export class GoogleCalendarEvent {
         this.timezone = timezone;
     }
 
-    to_json(): string {
+    json(): string {
         const event = {
             summary: this.summary,
             description: this.description,
@@ -63,7 +120,10 @@ export class GoogleCalendarEvent {
 
 export default class GoogleCalendar {
     static readonly API_URL: string = "https://www.googleapis.com/calendar/v3";
+    static readonly BATCH_API_URL: string =
+        "https://www.googleapis.com/batch/calendar/v3";
     static readonly RATE_LIMIT: number = 10;
+    static readonly BATCH_SIZE: number = 50;
 
     session: GoogleOAuthSession;
 
@@ -83,7 +143,36 @@ export default class GoogleCalendar {
         const headers = await this.auth_headers();
         return this.session
             .get(url, { headers: headers })
-            .then((resp) => resp.json());
+            .then((r) => r.json());
+    }
+
+    async create_events(
+        events: GoogleCalendarEvent[],
+        calendar_id: string
+    ): Promise<Response> {
+        if (events.length > GoogleCalendar.BATCH_SIZE) {
+            throw new TypeError(
+                `Maximum allowed batch size is ${GoogleCalendar.BATCH_SIZE}, not ${events.length}`
+            );
+        }
+
+        const headers = new Headers({
+            Authorization: "Bearer " + (await this.session.oauth_token()),
+        });
+
+        const batch_request = new BatchRequest(GoogleCalendar.BATCH_API_URL, {
+            method: HTTPMethod.POST,
+            headers: headers,
+        });
+        for (const event of events) {
+            const relative_url = `/calendar/v3/calendars/${calendar_id}/events`;
+            const request = new Request("", {
+                method: HTTPMethod.POST,
+                body: event.json(),
+            });
+            batch_request.add(relative_url, request);
+        }
+        return this.session.post(await batch_request.build());
     }
 
     async create_event(
@@ -92,11 +181,11 @@ export default class GoogleCalendar {
     ): Promise<any> {
         const url = `${GoogleCalendar.API_URL}/calendars/${calendar_id}/events`;
         const headers = await this.auth_headers();
-        const body = event.to_json();
+        const body = event.json();
 
         return this.session
             .post(url, { headers: headers, body: body })
-            .then((resp) => resp.json());
+            .then((r) => r.json());
     }
 
     async delete_event(eventId: string, calendar_id: string): Promise<void> {
@@ -115,7 +204,7 @@ export default class GoogleCalendar {
 
         const response = await this.session
             .post(url, { headers: headers, body: body })
-            .then((resp) => resp.json());
+            .then((r) => r.json());
 
         return response.id;
     }

@@ -12,7 +12,7 @@
   "oauth2": {
     "client_id": "770480046288-j50h3rqlnm9t3pfmqs1tpfqnc5qt06iv.apps.googleusercontent.com",
     "scopes": [
-      "https://www.googleapis.com/auth/calendar"
+      "https://www.googleapis.com/auth/calendar.app.created"
     ]
   },
   "content_security_policy": "script-src 'self' https://apis.google.com/ https://canvas.uw.edu/api; object-src 'self'",
@@ -28,7 +28,7 @@
   },
   "permissions": [
     "identity",
-    "https://www.googleapis.com/*",
+    "https://www.googleapis.com/auth/calendar",
     "https://canvas.uw.edu/api/*",
     "webRequest",
     "<all_urls>"

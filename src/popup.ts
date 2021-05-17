@@ -5,6 +5,7 @@ const init = () => {
         .getElementById("oAuth")
         .addEventListener("click", async function () {
             // await autocalendar.calendar.session.remove_token(await autocalendar.calendar.session.oauth_token())
+            chrome.runtime.sendMessage({ action: "oauth" });
         });
 
     document.getElementById("canvas").addEventListener("click", function () {
@@ -36,12 +37,6 @@ const init = () => {
 
             if (service === "canvas") {
                 chrome.runtime.sendMessage({ action: "sync_canvas" });
-                // chrome.runtime.getBackgroundPage(
-                //     backgroundPage => backgroundPage.testfunc()
-                // )
-
-                // await autocalendar.sync_canvas(calendar_name);
-                // await autocalendar.calendar.session.clear_token_cache()
             }
 
             // Stop loading animation when calendar updates are done
