@@ -244,14 +244,11 @@ export class CanvasAssignmentWrapper {
         if(desc){
             desc+="\n"
         }
-        if(this.canvas_general_infos.url){
-            desc+= this.canvas_general_infos.url;
-        } else if (this.canvas_assignment.html_url){
+        if (this.canvas_assignment.html_url){
             desc += this.canvas_assignment.html_url;
         }
         return desc
     }
-
 }
 
 export interface CanvasCourse {
