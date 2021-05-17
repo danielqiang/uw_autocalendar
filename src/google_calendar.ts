@@ -139,77 +139,40 @@ export default class GoogleCalendar {
     }
 
     async download_events(calendar_id: string): Promise<any> {
-        const params = new URLSearchParams({
-            maxResults: "2500"
-        })
-        const url = `${GoogleCalendar.API_URL}/calendars/${calendar_id}/events?${params}`;
+        const url = `${GoogleCalendar.API_URL}/calendars/${calendar_id}/events`;
         const headers = await this.auth_headers();
         return this.session
             .get(url, { headers: headers })
             .then((r) => r.json());
     }
 
-    private *islice(items: any[]): Generator<any[], void, void> {
-        for (let i = 0; i < items.length; i += GoogleCalendar.BATCH_SIZE) {
-            yield items.slice(i, i + GoogleCalendar.BATCH_SIZE);
-        }
-    }
-
     async create_events(
         events: GoogleCalendarEvent[],
         calendar_id: string
-    ): Promise<Response[]> {
-        let promises = [];
-
-        for (const event_batch of this.islice(events)) {
-            const headers = new Headers({
-                Authorization: "Bearer " + (await this.session.oauth_token()),
-            });
-
-            const batch_request = new BatchRequest(GoogleCalendar.BATCH_API_URL, {
-                method: HTTPMethod.POST,
-                headers: headers,
-            });
-            for (const event of event_batch) {
-                const relative_url = `/calendar/v3/calendars/${calendar_id}/events`;
-                const request = new Request("", {
-                    method: HTTPMethod.POST,
-                    body: event.json(),
-                });
-                batch_request.add(relative_url, request);
-            }
-            promises.push(this.session.post(await batch_request.build()));
+    ): Promise<Response> {
+        if (events.length > GoogleCalendar.BATCH_SIZE) {
+            throw new TypeError(
+                `Maximum allowed batch size is ${GoogleCalendar.BATCH_SIZE}, not ${events.length}`
+            );
         }
-        return Promise.all(promises)
 
-    }
+        const headers = new Headers({
+            Authorization: "Bearer " + (await this.session.oauth_token()),
+        });
 
-    async delete_events(
-        event_ids: string[],
-        calendar_id: string
-    ): Promise<void> {
-        let promises = []
-
-        for (const event_id_batch of this.islice(event_ids)) {
-            const headers = new Headers({
-                Authorization: "Bearer " + await this.session.oauth_token(),
-            });
-
-            const batch_request = new BatchRequest(GoogleCalendar.BATCH_API_URL, {
+        const batch_request = new BatchRequest(GoogleCalendar.BATCH_API_URL, {
+            method: HTTPMethod.POST,
+            headers: headers,
+        });
+        for (const event of events) {
+            const relative_url = `/calendar/v3/calendars/${calendar_id}/events`;
+            const request = new Request("", {
                 method: HTTPMethod.POST,
-                headers: headers,
+                body: event.json(),
             });
-
-            for (const event_id of event_id_batch) {
-                const relative_url = `/calendar/v3/calendars/${calendar_id}/events/${event_id}`;
-                const request = new Request("", {
-                    method: HTTPMethod.DELETE,
-                });
-                batch_request.add(relative_url, request);
-            }
-            promises.push(this.session.post(await batch_request.build()))
+            batch_request.add(relative_url, request);
         }
-        await Promise.all(promises)
+        return this.session.post(await batch_request.build());
     }
 
     async create_event(
@@ -225,8 +188,8 @@ export default class GoogleCalendar {
             .then((r) => r.json());
     }
 
-    async delete_event(event_id: string, calendar_id: string): Promise<void> {
-        const url = `${GoogleCalendar.API_URL}/calendars/${calendar_id}/events/${event_id}`;
+    async delete_event(eventId: string, calendar_id: string): Promise<void> {
+        const url = `${GoogleCalendar.API_URL}/calendars/${calendar_id}/events/${eventId}`;
         const headers = await this.auth_headers();
 
         await this.session.delete(url, { headers: headers });
@@ -251,17 +214,6 @@ export default class GoogleCalendar {
         const headers = await this.auth_headers();
 
         await this.session.delete(url, { headers: headers });
-    }
-
-    async delete_calendars(calendar_name: string): Promise<void> {
-        let promises = [];
-        // Delete all calendars with name `calendar_name`
-        for await (const calendar of this.iter_calendars()) {
-            if (calendar.summary === calendar_name) {
-                promises.push(this.delete_calendar(calendar.id));
-            }
-        }
-        await Promise.all(promises);
     }
 
     private async *iter_calendars(): AsyncGenerator<any, void, void> {
@@ -308,9 +260,7 @@ export default class GoogleCalendar {
         return null;
     }
 
-    async clear_calendar(calendar_id: string): Promise<void> {
-        const events = (await this.download_events(calendar_id)).items
-        const event_ids = events.map(event => event.id)
-        await this.delete_events(event_ids, calendar_id)
+    async calendar_exists(calendar_name: string): Promise<boolean> {
+        return (await this.get_calendar_id(calendar_name)) != null;
     }
 }
