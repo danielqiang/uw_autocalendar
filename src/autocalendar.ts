@@ -15,11 +15,11 @@ export default class AutoCalendar {
     }
 
     async sync_canvas(calendar_name: string) {
-        let calendar_id = await this.calendar.get_calendar_id(calendar_name);
-        if (calendar_id) {
-            await this.calendar.delete_calendar(calendar_id);
-        }
-        calendar_id = await this.calendar.create_calendar(calendar_name);
+        // let calendar_id = await this.calendar.get_calendar_id(calendar_name);
+        // if (calendar_id) {
+        //     await this.calendar.delete_calendar(calendar_id);
+        // }
+        let calendar_id = await this.calendar.create_calendar(calendar_name);
 
         const results = await Promise.all([
             this.canvas.download_events(),
