@@ -78,11 +78,16 @@ npm run test
 
 After building JS source files via `npm run build`, the [extension](extension/) directory is a complete Chrome extension can be directly loaded into Chrome.
 
-### GCP Setup
+### Google Cloud Platform Setup
 
-Since UW AutoCalendar does not yet have a stable extension ID as it has not yet been published to the Chrome Webstore, you will need to create a GCP project, generate an OAuth client ID for your extension ID (created after loading the extension in developer mode), enable the Google Calendar API, and whitelist the Google account you intend to update calendars on.
+UW AutoCalendar does not yet have a stable extension ID as it has not yet been published to the Chrome Webstore, so you will need to set up the GCP infrastructure manually. This includes the following:
 
-For OAuth setup, make a new GCP project and [enable the Google Calendar API](https://cloud.google.com/endpoints/docs/openapi/enable-api). Build your project and [load it as an extension](https://developer.chrome.com/docs/extensions/mv3/getstarted/#manifest) to get the chrome extension ID for your build, then create an [OAuth client ID](https://support.google.com/cloud/answer/6158849?hl=en) for a Chrome application (make sure to select **Chrome app** when asked for the application type). Take the client ID and place it inside [manifest.json](extension/manifest.json) by updating the oauth.client_id key, then reload the extension. This updates the OAuth client ID used by the extension.
+* Create a GCP Project for UW AutoCalendar
+* Generate an OAuth client ID for your extension ID (created after loading the extension in developer mode)
+* Enable the Google Calendar API
+* Whitelist the Google account you intend to update calendars on.
+
+To do this, make a new GCP project and [enable the Google Calendar API](https://cloud.google.com/endpoints/docs/openapi/enable-api). Build your project and [load it as an extension](https://developer.chrome.com/docs/extensions/mv3/getstarted/#manifest) to get the chrome extension ID for your build, then create an [OAuth client ID](https://support.google.com/cloud/answer/6158849?hl=en) for a Chrome application (make sure to select **Chrome app** when asked for the application type). Take the client ID and place it inside [manifest.json](extension/manifest.json) by updating the `oauth.client_id` key, then reload the extension. This updates the OAuth client ID used by the extension.
 
 To whitelist a Google account for use by UW AutoCalendar, go to the "OAuth Consent Screen" tab and add your Google account email as a test user. This allows you to authenticate with OAuth for UW AutoCalendar on that Google account.
 
@@ -92,7 +97,7 @@ Done! GCP setup is now complete.
 
 Tests are organized by the classes they test so add tests using this convention. Please add tests for any new or changed functionality submitted in pull requests.
 
-### Contributing to Project / Releases
+### How to Contribute
 
 To contribute, fork this repository and then create a pull request with your changes including:
 
