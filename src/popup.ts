@@ -24,33 +24,46 @@ const init = () => {
     });
 
     document
-        .getElementById("sync-to-calendar")
+        .getElementById("start-to-sync")
         .addEventListener("click", async function () {
-            if (service == null) {
+            if (service === null) {
                 console.log("No service has been chosen");
                 return;
             }
 
-            console.log("Started syncing from " + service);
-            // Start loading animation
+            console.log("Show course options on " + service);
             show_loader();
 
             if (service === "canvas") {
-                chrome.runtime.sendMessage({ action: "sync_canvas" });
+                // Fetch course information from Canvas
+
+                document.getElementById("course-list").style.display = "block";
             }
 
-            // Stop loading animation when calendar updates are done
             hide_loader();
-
-            // Clean up the page when sync process is done
-            remove_icon_focus("canvas-icon", "canvas", "n-canvas");
-            remove_sync_button_focus();
-            console.log("Finished syncing from " + service);
-            service = null;
-
-            // Stop animation ...
-            console.log("Finish syncing from " + service);
         });
+
+    document
+        .getElementById("close-course-list")
+        .addEventListener("click", function () {
+            document.getElementById("course-list").style.display = "none";
+        })
+
+    document
+        .getElementById("sync-to-calendar")
+        .addEventListener("click", async function () {
+            if (service !== null) {
+                console.log("Start syncing from " + service);
+                service = null;
+
+                chrome.runtime.sendMessage({action: "sync_canvas"});
+
+                // Clean up the page when sync process is done
+                remove_icon_focus("canvas-icon", "canvas", "n-canvas");
+                remove_sync_button_focus();
+            }
+        });
+
 };
 
 const add_icon_focus = (icon: string, service: string, s_name: string) => {
@@ -66,29 +79,29 @@ const remove_icon_focus = (icon: string, service: string, s_name: string) => {
 };
 
 const add_sync_button_focus = () => {
-    document.getElementById("sync-button").style.border =
+    document.getElementById("sync-button-container").style.border =
         "rgba(90, 24, 107, 0.6) solid 2px";
-    document.getElementById("sync-button").style.boxShadow =
-        "1px 2px rgb(70, 24, 60, 0.85)";
-    document.getElementById("sync-to-calendar").style.color = "rgb(60, 14, 50)";
+    document.getElementById("sync-button-container").style.boxShadow =
+        "1px 2px rgba(70, 24, 60, 0.85)";
+    document.getElementById("start-to-sync").style.color = "rgb(60, 14, 50)";
 };
 
 const remove_sync_button_focus = () => {
-    document.getElementById("sync-button").style.border = "#e0d6f5 solid 2px";
-    document.getElementById("sync-button").style.boxShadow =
+    document.getElementById("sync-button-container").style.border = "#e0d6f5 solid 2px";
+    document.getElementById("sync-button-container").style.boxShadow =
         "1px 2px rgba(70, 24, 60, 0.4)";
-    document.getElementById("sync-to-calendar").style.color =
+    document.getElementById("start-to-sync").style.color =
         "rgba(70, 24, 60, 0.5)";
 };
 
 const show_loader = () => {
-    document.getElementById("sync-to-calendar").style.display = "none";
+    document.getElementById("start-to-sync").style.display = "none";
     document.getElementById("loader").style.display = "block";
 };
 
 const hide_loader = () => {
     document.getElementById("loader").style.display = "none";
-    document.getElementById("sync-to-calendar").style.display = "block";
+    document.getElementById("start-to-sync").style.display = "block";
 };
 
 init();
