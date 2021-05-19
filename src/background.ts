@@ -20,7 +20,6 @@
             return true;
         } else if (request.action === "sync_canvas") {
             console.time("sync_canvas");
-
             // TODO Only sync courses with id contained in request.course_list
             autocalendar.sync_canvas(calendar_name).then(() => {
                 console.timeEnd("sync_canvas");

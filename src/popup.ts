@@ -36,6 +36,8 @@ const init = () => {
                 // Fetch course titles from Canvas
                 chrome.runtime.sendMessage({ action: "list_canvas_courses"}, async r => {
                     await append_course_list(r.course_list);
+                    document.getElementById("calendar-button").innerHTML = "Sync to Calendar";
+                    document.getElementById("sync-to-calendar").style.pointerEvents = "auto";
                     document.getElementById("course-list").style.display = "block";
                 });
             }
@@ -62,15 +64,19 @@ const init = () => {
                 return;
             }
             console.log("Start syncing from " + service);
+            show_loader();
             service = null;
 
             document.querySelectorAll("input[type=checkbox]:checked")
                 .forEach(checked_course => {
                 course_list.add(checked_course.id);
             });
+            console.log(course_list);
+
             chrome.runtime.sendMessage({action: "sync_canvas", course_list: Array.from(course_list).join(' ')},
                 () => {
                 // Clean up the page when sync process is done
+                hide_loader();
                 course_list.clear();
                 remove_icon_focus("canvas-icon", "canvas", "n-canvas");
                 remove_sync_button_focus();
@@ -118,13 +124,15 @@ const append_course_list = async (course_list : Array<string>) => {
 }
 
 const show_loader = () => {
-    document.getElementById("start-to-sync").style.display = "none";
+    document.getElementById("sync-to-calendar").style.display = "none";
     document.getElementById("loader").style.display = "block";
 };
 
 const hide_loader = () => {
     document.getElementById("loader").style.display = "none";
-    document.getElementById("start-to-sync").style.display = "block";
+    document.getElementById("calendar-button").innerHTML = "Sync is finished";
+    document.getElementById("sync-to-calendar").style.pointerEvents = "none";
+    document.getElementById("sync-to-calendar").style.display = "block";
 };
 
 init();
