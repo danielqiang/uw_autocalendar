@@ -1,5 +1,6 @@
 const init = () => {
     let service = null;
+    let course_list = new Set();
 
     document
         .getElementById("oAuth")
@@ -31,16 +32,13 @@ const init = () => {
                 return;
             }
 
-            console.log("Show course options on " + service);
-            show_loader();
-
             if (service === "canvas") {
-                // Fetch course information from Canvas
-
-                document.getElementById("course-list").style.display = "block";
+                // Fetch course titles from Canvas
+                chrome.runtime.sendMessage({ action: "list_canvas_courses"}, async r => {
+                    await append_course_list(r.course_list);
+                    document.getElementById("course-list").style.display = "block";
+                });
             }
-
-            hide_loader();
         });
 
     document
@@ -50,18 +48,33 @@ const init = () => {
         })
 
     document
+        .querySelectorAll("input[type=checkbox]").forEach(course_checkbox => {
+            course_checkbox.addEventListener("click", function () {
+                this.checked = this.checked !== true;
+            });
+    })
+
+    document
         .getElementById("sync-to-calendar")
         .addEventListener("click", async function () {
-            if (service !== null) {
-                console.log("Start syncing from " + service);
-                service = null;
+            if (service == null) {
+                console.log("Sync is in process");
+                return;
+            }
+            console.log("Start syncing from " + service);
+            service = null;
 
-                chrome.runtime.sendMessage({action: "sync_canvas"});
-
+            document.querySelectorAll("input[type=checkbox]:checked")
+                .forEach(checked_course => {
+                course_list.add(checked_course.id);
+            });
+            chrome.runtime.sendMessage({action: "sync_canvas", course_list: Array.from(course_list).join(' ')},
+                () => {
                 // Clean up the page when sync process is done
+                course_list.clear();
                 remove_icon_focus("canvas-icon", "canvas", "n-canvas");
                 remove_sync_button_focus();
-            }
+            });
         });
 
 };
@@ -93,6 +106,16 @@ const remove_sync_button_focus = () => {
     document.getElementById("start-to-sync").style.color =
         "rgba(70, 24, 60, 0.5)";
 };
+
+const append_course_list = async (course_list : Array<string>) => {
+    let list = document.getElementById("course-name-list");
+    course_list.forEach(course => {
+        list.innerHTML +=
+            '<div class="course-name"> <label>' +
+            '<input type="checkbox" class="check-course" id='+ course[0] + '>' +
+            course[1] + '</label></div>';
+    });
+}
 
 const show_loader = () => {
     document.getElementById("start-to-sync").style.display = "none";

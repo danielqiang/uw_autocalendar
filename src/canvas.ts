@@ -332,10 +332,18 @@ export default class Canvas {
         return this.download_calendar_events(CanvasEventType.EVENT);
     }
 
-    async download_assignments(): Promise<
-        Map<string, CanvasAssignmentEvent[]>
-    > {
+    async download_assignments(): Promise<Map<string, CanvasAssignmentEvent[]>> {
         return this.download_calendar_events(CanvasEventType.ASSIGNMENT);
+    }
+
+    async get_course_names(courses : Array<any>): Promise<any[]> {
+        let course_names = [];
+        courses.forEach(course => {
+            let full_name = course.name;
+            let title = full_name.substring(0, full_name.indexOf(":"));
+            course_names.push([course.id, title]);
+        });
+        return course_names;
     }
 
     private async download_calendar_events(

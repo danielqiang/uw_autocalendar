@@ -245,10 +245,12 @@ div.icon-holder {
     cursor: pointer;
 }
 
-.course-names {
-    color: rgba(60, 14, 50, 0.7);
+.course-available {
+    height: 40px;
     float: left;
-    margin: -5px 0 0 7px;
+    margin: -7px 0 0 7px;
+    color: rgba(60, 14, 50, 0.7);
+    font-size: 17px;
 }
 
 #course-name-list {
@@ -256,6 +258,24 @@ div.icon-holder {
     border: 1px solid rgba(74, 65, 73, 0.6);
     margin: 15% 3% 0 3%;
     border-radius: 3px;
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
+.course-name{
+    text-align: left;
+    vertical-align: middle;
+    padding: 0 0 1px 10px;
+    height: 21px;
+    color: black;
+    font-size: 12px;
+    font-weight: normal;
+    font-family: "Hiragino Kaku Gothic Pro", sans-serif;
+    width: 100%;
+}
+
+.check-course {
+    vertical-align: middle;
 }
 
 #sync-to-calendar {
@@ -278,7 +298,3 @@ div.icon-holder {
     position: absolute;
     bottom: 9px;
 }
-
-
-
-
