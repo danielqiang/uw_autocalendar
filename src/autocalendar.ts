@@ -1,7 +1,7 @@
 import GoogleCalendar, { GoogleCalendarEvent } from "./google_calendar.js";
 import Canvas, {
     CanvasAssignmentEvent, CanvasAssignmentWrapper,
-    CanvasCalendarEvent,
+    CanvasCalendarEvent, CanvasEventWrapper,
 } from "./canvas.js";
 import { batch_await } from "./utils.js";
 
@@ -57,7 +57,7 @@ export default class AutoCalendar {
         course: string,
         assignment: CanvasAssignmentEvent
     ): GoogleCalendarEvent {
-        let wrapper = new CanvasAssignmentWrapper(assignment)
+        let wrapper = new CanvasAssignmentWrapper(course, assignment)
         return new GoogleCalendarEvent(
             wrapper.due_date,
             wrapper.due_date,
@@ -70,11 +70,12 @@ export default class AutoCalendar {
         course: string,
         event: CanvasCalendarEvent
     ): GoogleCalendarEvent {
+        let wrapper = new CanvasEventWrapper(course, event)
         return new GoogleCalendarEvent(
-            new Date(event.start_at),
-            new Date(event.end_at),
-            event.title,
-            event.description
+            wrapper.start_date,
+            wrapper.end_date,
+            wrapper.title,
+            wrapper.full_description
         );
     }
 }

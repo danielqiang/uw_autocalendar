@@ -168,10 +168,12 @@ export interface CanvasAssignment {
 export class CanvasAssignmentWrapper {
     canvas_assignment: CanvasAssignment;
     canvas_general_infos: CanvasAssignmentEvent;
+    canvas_course_name: string;
 
-    constructor(canvas_assignment: CanvasAssignmentEvent) {
+    constructor(canvas_course:string, canvas_assignment: CanvasAssignmentEvent) {
         this.canvas_general_infos = canvas_assignment;
         this.canvas_assignment = canvas_assignment.assignment;
+        this.canvas_course_name = canvas_course;
     }
 
     get due_date(): Date {
@@ -184,15 +186,16 @@ export class CanvasAssignmentWrapper {
         );
     }
     /** Returns short description of a canvas assignment with the specified format
-     *  @returns: String of pattern COURSE NAME CODE: Assignment Name.
+     *  @returns: String of pattern [COURSE NAME CODE]: Assignment Name.
      * */
     get title(): string {
         let desc = "";
         //Lets start by getting the course name and a colon
-        if (this.canvas_general_infos.context_name){
+        if (this.canvas_course_name){
+            desc += "" + this.canvas_course_name.toLowerCase().trim()
+        }
+        else if (this.canvas_general_infos.context_name){
             desc += "" + this.canvas_general_infos.context_name.split(":")[0].split("-")[0].toLowerCase().trim();
-        } else if (this.canvas_assignment.course_id){
-            // TODO Is there a way to look up our course ID's? We know which course is assigned which ID when we look them up in the calendar, that was moved to utils.ts though
         } else {
             console.log("ERROR");
             desc += "COURSE MISSING";
@@ -203,10 +206,12 @@ export class CanvasAssignmentWrapper {
         desc = "[" + desc
         //lets now get the assignment name and remove duplicate words from the course name
         if(this.canvas_assignment.name){
+            //to clean we split the assignment name by spaces, then only include words NOT in the course name
             let cleaned_name = this.canvas_assignment.name.toLowerCase()
                 .split(" ").filter(e => !comparison.includes(e)).join(" ")
             desc+= cleaned_name;
         } else if (this.canvas_general_infos.title){
+            //to clean we split the assignment name by spaces, then only include words NOT in the course name
             let cleaned_name = this.canvas_general_infos.title.toLowerCase()
                 .split(" ").filter(e => !comparison.includes(e)).join(" ")
             desc += cleaned_name;
@@ -218,24 +223,116 @@ export class CanvasAssignmentWrapper {
     }
 
     /**
-     * Will return a string of format assignment description \n canvas URL to the assignment itself.
+     * Will return a string of the description of an assignment.
+     * This will be what appears when a user clicks on the google calendar event, expanding the pop up to reveal
+     * a description.
+     *
+     * Description follows the format of:
+     * Assignment description listed on Canvas Calendar Tab
+     * \n
+     * Link to Assignment in the Canvas Assignments Tab.
+     *
+     * If description is empty, should just return a link to the assignment on canvas.
      */
     get full_description(): string {
         let desc = "";
+        //first check the more general assignment interface, then the more specific one for assignment names.
         if(this.canvas_general_infos.description){
             desc+=this.canvas_general_infos.description;
         } else if (this.canvas_assignment.description){
             desc+=this.canvas_assignment.description;
         }
+        //If this assignment has a description we will add one new line character before pasting the link to the canvas
+        // assignment, otherwise we dont add extra white space
         if(desc){
             desc+="\n"
         }
+        //link the canvas assignment itself, allowing users to redirect to canvas to turn in things
         if (this.canvas_assignment.html_url){
             desc += this.canvas_assignment.html_url;
         }
         return desc
     }
 }
+
+export class CanvasEventWrapper {
+    canvas_event: CanvasCalendarEvent;
+    canvas_course_name: string;
+
+    constructor(canvas_course:string, canvas_assignment: CanvasCalendarEvent) {
+        this.canvas_event = canvas_assignment;
+        this.canvas_course_name = canvas_course;
+    }
+
+    get start_date(): Date {
+        //if this is an all day event lets set the start time to just after midnight, beginning of the day
+        if(this.canvas_event.all_day){
+            let date = new Date(this.canvas_event.all_day_date)
+            date.setHours(0,0,0,0)
+            return date
+        }
+        return new Date(
+            //begins
+            this.canvas_event.start_at
+        );
+    }
+
+    get end_date(): Date {
+        //if this event is an all day one lets send the end time to just before midnight, the end of the day
+        if(this.canvas_event.all_day){
+            let date = new Date(this.canvas_event.all_day_date)
+            date.setHours(23,59,59,999);
+            return date;
+        }
+        return new Date(
+            //begins
+            this.canvas_event.end_at
+        );
+    }
+    /** Returns short description of a canvas assignment with the specified format
+     *  @returns: String of pattern [COURSE NAME CODE]: Assignment Name.
+     * */
+    get title(): string {
+        let desc = "";
+        //Lets start by getting the course name and a colon
+        if (this.canvas_course_name){
+            desc += "" + this.canvas_course_name.toLowerCase().trim()
+        }
+        else if (this.canvas_event.context_name){
+            desc += "" + this.canvas_event.context_name.split(":")[0].split("-")[0].toLowerCase().trim();
+            //desc += "" + this.canvas_event.context_name.toLowerCase().trim();
+        } else {
+            console.log("ERROR");
+            desc += "COURSE MISSING";
+        }
+        return desc
+    }
+
+    /**
+     * Will return a string of the description of an assignment.
+     * This will be what appears when a user clicks on the google calendar event, expanding the pop up to reveal
+     * a description.
+     *
+     * Description follows the format of:
+     * Assignment description listed on Canvas Calendar Tab
+     * \n
+     * Link to Assignment in the Canvas Assignments Tab.
+     *
+     * If description is empty, should just return a link to the assignment on canvas.
+     */
+    get full_description(): string {
+        let desc = "";
+        //lets check if this event has a description and use that. Otherwise lets just redirect them to canvas
+        if(this.canvas_event.description){
+            desc+=this.canvas_event.description;
+        } else if (this.canvas_event.html_url){
+            desc += this.canvas_event.html_url;
+        }
+        return desc
+    }
+}
+
+
 
 export interface CanvasCourse {
     id: number;
