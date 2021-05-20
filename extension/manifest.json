@@ -10,7 +10,7 @@
     "128": "./images/extension_profile/extension-icon-128.png"
   },
   "oauth2": {
-    "client_id": "770480046288-j50h3rqlnm9t3pfmqs1tpfqnc5qt06iv.apps.googleusercontent.com",
+    "client_id": "770480046288-0q0o61qgu1r2g6v2i84cfgti99ir7eeo.apps.googleusercontent.com",
     "scopes": [
       "https://www.googleapis.com/auth/calendar.app.created"
     ]

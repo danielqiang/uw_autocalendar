@@ -130,7 +130,7 @@ const show_loader = () => {
 
 const hide_loader = () => {
     document.getElementById("loader").style.display = "none";
-    document.getElementById("calendar-button").innerHTML = "Sync is finished";
+    document.getElementById("calendar-button").innerHTML = "Sync completed";
     document.getElementById("sync-to-calendar").style.pointerEvents = "none";
     document.getElementById("sync-to-calendar").style.display = "block";
 };
