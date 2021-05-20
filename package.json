@@ -1,7 +1,7 @@
 {
   "scripts": {
     "test": "jest",
-    "build": "tsc"
+    "build": "rm -rf extension/js && tsc"
   },
   "devDependencies": {
     "@types/jest": "^26.0.23",

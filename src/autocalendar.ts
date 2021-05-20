@@ -30,15 +30,15 @@ export default class AutoCalendar {
 
         let events: GoogleCalendarEvent[] = [];
 
-        for (const course_events of canvas_course_events.values()) {
+        for (const [course, course_events] of canvas_course_events) {
             course_events.forEach((e) =>
-                events.push(this.event_to_calendar_event(e))
+                events.push(this.event_to_calendar_event(course, e))
             );
         }
 
-        for (const course_assignments of canvas_course_assignments.values()) {
+        for (const [course, course_assignments] of canvas_course_assignments) {
             course_assignments.forEach((e) =>
-                events.push(this.assignment_to_calendar_event(e))
+                events.push(this.assignment_to_calendar_event(course, e))
             );
         }
 
@@ -54,6 +54,7 @@ export default class AutoCalendar {
     }
 
     private assignment_to_calendar_event(
+        course: string,
         assignment: CanvasAssignmentEvent
     ): GoogleCalendarEvent {
         let wrapper = new CanvasAssignmentWrapper(assignment)
@@ -66,6 +67,7 @@ export default class AutoCalendar {
     }
 
     private event_to_calendar_event(
+        course: string,
         event: CanvasCalendarEvent
     ): GoogleCalendarEvent {
         return new GoogleCalendarEvent(
