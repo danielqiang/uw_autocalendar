@@ -1,6 +1,11 @@
 const init = () => {
     let service = null;
 
+    // Poll background to keep sync animation up to date
+    const interval = setInterval(() => {
+        chrome.runtime.sendMessage({ action: "check_running_status" });
+    }, 500);
+
     document
         .getElementById("oAuth")
         .addEventListener("click", async function () {
@@ -9,14 +14,17 @@ const init = () => {
         });
 
     document.getElementById("canvas").addEventListener("click", function () {
-        let opacity = document.getElementById("canvas-icon").style.opacity;
-        if (parseInt(opacity) < 1) {
-            service = "canvas";
+        const selected =
+            parseInt(document.getElementById("canvas-icon").style.opacity) < 1;
+        if (selected) {
             console.log("Choose service: " + service);
+
+            service = "canvas";
             add_icon_focus("canvas-icon", "canvas", "n-canvas");
             add_sync_button_focus();
         } else {
             console.log("Cancel service: " + service);
+
             service = null;
             remove_icon_focus("canvas-icon", "canvas", "n-canvas");
             remove_sync_button_focus();
@@ -26,31 +34,45 @@ const init = () => {
     document
         .getElementById("sync-to-calendar")
         .addEventListener("click", async function () {
-            if (service == null) {
-                console.log("No service has been chosen");
-                return;
+            switch (service) {
+                case "canvas":
+                    service = null;
+                    chrome.runtime.sendMessage({ action: "sync_canvas" });
+                    break;
+                default:
+                    console.log("No service has been chosen");
+                    return;
             }
-
             console.log("Started syncing from " + service);
             // Start loading animation
             show_loader();
-
-            if (service === "canvas") {
-                chrome.runtime.sendMessage({ action: "sync_canvas" });
-            }
-
-            // Stop loading animation when calendar updates are done
-            hide_loader();
-
-            // Clean up the page when sync process is done
-            remove_icon_focus("canvas-icon", "canvas", "n-canvas");
-            remove_sync_button_focus();
-            console.log("Finished syncing from " + service);
-            service = null;
-
-            // Stop animation ...
-            console.log("Finish syncing from " + service);
         });
+
+    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+        if (request.action === "sync_canvas") {
+            if (request.result) {
+                // Clean up the page when sync process is done
+                remove_icon_focus("canvas-icon", "canvas", "n-canvas");
+                remove_sync_button_focus();
+                // Stop loading animation when calendar updates are done
+                hide_loader();
+                console.log("Finished syncing from " + service);
+            } else {
+                console.log("Failed to sync from " + service);
+            }
+        } else if (request.action === "check_running_status") {
+            if (request.result) {
+                add_icon_focus("canvas-icon", "canvas", "n-canvas");
+                add_sync_button_focus();
+                show_loader();
+            } else {
+                remove_icon_focus("canvas-icon", "canvas", "n-canvas");
+                remove_sync_button_focus();
+                hide_loader();
+                clearInterval(interval);
+            }
+        }
+    });
 };
 
 const add_icon_focus = (icon: string, service: string, s_name: string) => {
@@ -84,11 +106,13 @@ const remove_sync_button_focus = () => {
 const show_loader = () => {
     document.getElementById("sync-to-calendar").style.display = "none";
     document.getElementById("loader").style.display = "block";
+    document.getElementById("sync-to-calendar").style.pointerEvents = "none";
 };
 
 const hide_loader = () => {
     document.getElementById("loader").style.display = "none";
     document.getElementById("sync-to-calendar").style.display = "block";
+    document.getElementById("sync-to-calendar").style.pointerEvents = "auto";
 };
 
 init();
