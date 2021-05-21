@@ -192,10 +192,10 @@ export class CanvasAssignmentWrapper {
         let desc = "";
         //Lets start by getting the course name and a colon
         if (this.canvas_course_name){
-            desc += "" + this.canvas_course_name.toLowerCase().trim()
+            desc += this.canvas_course_name.toLowerCase().trim()
         }
         else if (this.canvas_general_infos.context_name){
-            desc += "" + this.canvas_general_infos.context_name.split(":")[0].split("-")[0].toLowerCase().trim();
+            desc += this.canvas_general_infos.context_name.split(":")[0].split("-")[0].toLowerCase().trim();
         } else {
             console.log("ERROR");
             desc += "COURSE MISSING";
@@ -238,14 +238,14 @@ export class CanvasAssignmentWrapper {
         let desc = "";
         //first check the more general assignment interface, then the more specific one for assignment names.
         if(this.canvas_general_infos.description){
-            desc+=this.canvas_general_infos.description;
+            desc += this.canvas_general_infos.description;
         } else if (this.canvas_assignment.description){
-            desc+=this.canvas_assignment.description;
+            desc += this.canvas_assignment.description;
         }
-        //If this assignment has a description we will add one new line character before pasting the link to the canvas
+        // If this assignment has a description we will add one new line character before pasting the link to the canvas
         // assignment, otherwise we dont add extra white space
         if(desc){
-            desc+="\n"
+            desc += "\n"
         }
         //link the canvas assignment itself, allowing users to redirect to canvas to turn in things
         if (this.canvas_assignment.html_url){
@@ -272,7 +272,6 @@ export class CanvasEventWrapper {
             return date
         }
         return new Date(
-            //begins
             this.canvas_event.start_at
         );
     }
@@ -285,7 +284,6 @@ export class CanvasEventWrapper {
             return date;
         }
         return new Date(
-            //begins
             this.canvas_event.end_at
         );
     }
@@ -296,23 +294,24 @@ export class CanvasEventWrapper {
         let desc = "";
         //Lets start by getting the course name and a colon
         if (this.canvas_course_name){
-            desc += "" + this.canvas_course_name.toLowerCase().trim()
+            desc += this.canvas_course_name.toLowerCase().trim()
         }
         else if (this.canvas_event.context_name){
-            desc += "" + this.canvas_event.context_name.toLowerCase().trim();
+            desc += this.canvas_event.context_name.toLowerCase().trim();
         } else {
-            console.log("ERROR");
+            // in scenario that neither canvas_course_name nor canvas_)event_context_name have info, we have no where
+            // else to look for the course name. Therefore lets just have a placeholder.
             desc += "COURSE MISSING";
         }
 
-        //lets now get the assignment name and remove duplicate words from the course name
+        //sometimes the title of the event includes extra information, so lets check for that extra info and add it
         if(this.canvas_event.title && this.canvas_event.title.toLowerCase().trim() !== desc){
             let comparison = desc.split(" ");
             desc += " : ";
             //to clean we split the assignment name by spaces, then only include words NOT in the course name
              let cleaned_name = this.canvas_event.title.toLowerCase()
                  .split(" ").filter(e => !comparison.includes(e)).join(" ")
-             desc+= cleaned_name;
+             desc += cleaned_name;
         }
         return desc
     }
@@ -333,13 +332,12 @@ export class CanvasEventWrapper {
         let desc = "";
         //lets check if this event has a description and use that. Otherwise lets just redirect them to canvas
         if(this.canvas_event.description){
-            desc+=this.canvas_event.description;
+            desc += this.canvas_event.description;
         } if (this.canvas_event.html_url){
             desc += this.canvas_event.html_url;
         }
         return desc
-    }
-}
+    }}
 
 
 
