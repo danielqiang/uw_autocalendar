@@ -299,11 +299,20 @@ export class CanvasEventWrapper {
             desc += "" + this.canvas_course_name.toLowerCase().trim()
         }
         else if (this.canvas_event.context_name){
-            desc += "" + this.canvas_event.context_name.split(":")[0].split("-")[0].toLowerCase().trim();
-            //desc += "" + this.canvas_event.context_name.toLowerCase().trim();
+            desc += "" + this.canvas_event.context_name.toLowerCase().trim();
         } else {
             console.log("ERROR");
             desc += "COURSE MISSING";
+        }
+
+        //lets now get the assignment name and remove duplicate words from the course name
+        if(this.canvas_event.title && this.canvas_event.title.toLowerCase().trim() !== desc){
+            let comparison = desc.split(" ");
+            desc += " : ";
+            //to clean we split the assignment name by spaces, then only include words NOT in the course name
+             let cleaned_name = this.canvas_event.title.toLowerCase()
+                 .split(" ").filter(e => !comparison.includes(e)).join(" ")
+             desc+= cleaned_name;
         }
         return desc
     }
@@ -325,7 +334,7 @@ export class CanvasEventWrapper {
         //lets check if this event has a description and use that. Otherwise lets just redirect them to canvas
         if(this.canvas_event.description){
             desc+=this.canvas_event.description;
-        } else if (this.canvas_event.html_url){
+        } if (this.canvas_event.html_url){
             desc += this.canvas_event.html_url;
         }
         return desc
