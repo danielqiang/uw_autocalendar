@@ -4,7 +4,7 @@ const init = () => {
     // Poll background to keep sync animation up to date
     const interval = setInterval(() => {
         chrome.runtime.sendMessage({ action: "check_running_status" });
-    }, 500);
+    }, 200);
 
     document
         .getElementById("oAuth")
@@ -17,13 +17,13 @@ const init = () => {
         const selected =
             parseInt(document.getElementById("canvas-icon").style.opacity) < 1;
         if (selected) {
-            console.log("Choose service: " + service);
+            console.log("Choose service: canvas");
 
             service = "canvas";
             add_icon_focus("canvas-icon", "canvas", "n-canvas");
             add_sync_button_focus();
         } else {
-            console.log("Cancel service: " + service);
+            console.log("Cancel service: canvas");
 
             service = null;
             remove_icon_focus("canvas-icon", "canvas", "n-canvas");
