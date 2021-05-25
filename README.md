@@ -6,7 +6,7 @@
 
 ### Installation
 
-Download UW AutoCalendar from the [Chrome Webstore](https://chrome.google.com/webstore/category/extensions).
+Download UW AutoCalendar from the [Chrome Webstore](https://chrome.google.com/webstore/detail/uw-autocalendar/ledaenehpknpfpodpbaoagjifopbgffn?hl=en&authuser=5).
 
 **Note:** UW AutoCalendar has been submitted for review to the Chrome Webstore but has not yet been published. Refer to the developer guide below for manual installation/build instructions.
 
