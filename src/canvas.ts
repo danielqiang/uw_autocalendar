@@ -1,8 +1,8 @@
-import { HTTPMethod, Session } from "./session.js";
-import { batch_await } from "./utils.js";
+import { HTTPMethod, Session } from "./session";
+import { batch_await } from "./utils";
 
 export class CanvasSAMLSession extends Session {
-    is_authenticating: boolean;
+    is_authenticating: boolean = false;
 
     async authenticate(callback: () => Promise<Response>): Promise<Promise<Response>> {
         // Only allow one failed request to open up a Canvas tab.
