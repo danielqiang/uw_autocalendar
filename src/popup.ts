@@ -3,8 +3,8 @@ const init = () => {
 
     // Poll background to keep sync animation up to date
     const interval = setInterval(() => {
-        chrome.runtime.sendMessage({ action: "check_running_status" });
-    }, 500);
+        chrome.runtime.sendMessage({ action: "check_sync_status" });
+    }, 200);
 
     document
         .getElementById("oAuth")
@@ -17,13 +17,13 @@ const init = () => {
         const selected =
             parseInt(document.getElementById("canvas-icon").style.opacity) < 1;
         if (selected) {
-            console.log("Choose service: " + service);
+            console.log("Choose service: canvas");
 
             service = "canvas";
             add_icon_focus("canvas-icon", "canvas", "n-canvas");
             add_sync_button_focus();
         } else {
-            console.log("Cancel service: " + service);
+            console.log("Cancel service: canvas");
 
             service = null;
             remove_icon_focus("canvas-icon", "canvas", "n-canvas");
@@ -36,6 +36,8 @@ const init = () => {
         .addEventListener("click", async function () {
             switch (service) {
                 case "canvas":
+                    console.log("Started syncing from " + service);
+
                     service = null;
                     chrome.runtime.sendMessage({ action: "sync_canvas" });
                     break;
@@ -43,33 +45,33 @@ const init = () => {
                     console.log("No service has been chosen");
                     return;
             }
-            console.log("Started syncing from " + service);
+
             // Start loading animation
             show_loader();
         });
 
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (request.action === "sync_canvas") {
-            if (request.result) {
+            if (request.complete) {
                 // Clean up the page when sync process is done
                 remove_icon_focus("canvas-icon", "canvas", "n-canvas");
                 remove_sync_button_focus();
                 // Stop loading animation when calendar updates are done
                 hide_loader();
-                console.log("Finished syncing from " + service);
+                console.log("Finished syncing from canvas");
             } else {
-                console.log("Failed to sync from " + service);
+                console.log("Failed to sync from canvas");
             }
-        } else if (request.action === "check_running_status") {
-            if (request.result) {
-                add_icon_focus("canvas-icon", "canvas", "n-canvas");
-                add_sync_button_focus();
-                show_loader();
-            } else {
+        } else if (request.action === "check_sync_status") {
+            if (request.complete) {
                 remove_icon_focus("canvas-icon", "canvas", "n-canvas");
                 remove_sync_button_focus();
                 hide_loader();
                 clearInterval(interval);
+            } else {
+                add_icon_focus("canvas-icon", "canvas", "n-canvas");
+                add_sync_button_focus();
+                show_loader();
             }
         }
     });

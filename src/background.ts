@@ -7,7 +7,14 @@
     const autocalendar = new AutoCalendar();
 
     let prev_execution = new Date(0);
-    let isRunning = false;
+    let sync_complete = true;
+
+    const send_message_to_popup = (action: string, result: boolean) => {
+        chrome.runtime.sendMessage({
+            action: action,
+            complete: result
+        });
+    };
 
     chrome.runtime.onMessage.addListener(
         async (request, sender, sendResponse) => {
@@ -21,10 +28,13 @@
                 if (time_since_prev_execution >= 60) {
                     console.time("sync_canvas");
 
-                    isRunning = true;
+                    sync_complete = false;
                     prev_execution = new Date();
-                    await autocalendar.sync_canvas(calendar_name);
-                    isRunning = false;
+                    await autocalendar.sync_canvas(calendar_name).catch((err) => {
+                        console.log(`Error occurs during sync process: ${err}`);
+                        send_message_to_popup(request.action, false);
+                    });
+                    sync_complete = true;
 
                     console.timeEnd("sync_canvas");
                 } else {
@@ -34,15 +44,9 @@
                         } seconds`
                     );
                 }
-                chrome.runtime.sendMessage({
-                    action: request.action,
-                    result: true,
-                });
-            } else if (request.action === "check_running_status") {
-                chrome.runtime.sendMessage({
-                    action: request.action,
-                    result: isRunning,
-                });
+                send_message_to_popup(request.action, true);
+            } else if (request.action === "check_sync_status") {
+                send_message_to_popup(request.action, sync_complete);
             }
         }
     );
