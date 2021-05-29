@@ -2,8 +2,16 @@ import { HTTPMethod, Session } from "./session.js";
 import { batch_await } from "./utils.js";
 
 export class CanvasSAMLSession extends Session {
-    is_authenticating: boolean;
+    is_authenticating: boolean = false;
 
+    /**
+     * Method responsible for checking a users authentication status with canvas and aquiring appropriate
+     * authentication cookies if needed.
+     *
+     * Checks for authentication status by attempting to direct to apps.canvas.uw.edu and waiting for the completion
+     * of the request, implying the user has the appropriate cookies.
+     * @param callback: method of communication this method will fufil the callback upon authentication finishing.
+     */
     async authenticate(callback: () => Promise<Response>): Promise<Promise<Response>> {
         // Only allow one failed request to open up a Canvas tab.
         if (!this.is_authenticating) {
@@ -33,6 +41,13 @@ export class CanvasSAMLSession extends Session {
         });
     }
 
+    /**
+     * A wrapper around Session.Request with an extra clause in the scenario that a request is denied due to
+     * permissions error (code 401) in which case canvas.request will attempt to authenticate using Canvas.authenticate
+     * @param method
+     * @param url
+     * @param init
+     */
     async request(
         method: HTTPMethod,
         url: string,
@@ -51,6 +66,12 @@ export class CanvasSAMLSession extends Session {
     }
 }
 
+/**
+ * The following interfaces are all mirrors of the Canvas API v1. The full descriptions of each interface
+ * along with examples and types may be found here.
+ * CanvasCalendarEvent: https://canvas.instructure.com/doc/api/calendar_events.html
+ *
+ */
 export interface CanvasCalendarEvent {
     id: number;
     title: string;
@@ -78,6 +99,12 @@ export interface CanvasCalendarEvent {
     duplicates?: any[];
 }
 
+/**
+ * The following interfaces are all mirrors of the Canvas API v1. The full descriptions of each interface
+ * along with examples and types may be found here.
+ * CanvasAssignmentEvent: https://canvas.instructure.com/doc/api/calendar_events.html
+ *
+ */
 export interface CanvasAssignmentEvent {
     title: string;
     description: string;
@@ -165,27 +192,51 @@ export interface CanvasAssignment {
     require_lockdown_browser: boolean;
 }
 
+/**
+ * The following class is a wrapper on the CanvasAssignmentEvent designed to improve robustness in the scenario
+ * that a professor does not upload certain information about their assignment, as to avoid blank entries in calendars.
+ */
 export class CanvasAssignmentWrapper {
     canvas_assignment: CanvasAssignment;
     canvas_general_infos: CanvasAssignmentEvent;
     canvas_course_name: string;
 
+    /**
+     * Constructor for assignment wrapper
+     * @param canvas_course: the current name of the course, passed from previous API calls which gather
+     * all possible courses and their assignments. ex: course.getAssignments() we take course.toString() to assure
+     * there exists a name.
+     * @param canvas_assignment: a CanvasAssignmentEvent interface from API calls. See declaration above.
+     */
     constructor(canvas_course:string, canvas_assignment: CanvasAssignmentEvent) {
         this.canvas_general_infos = canvas_assignment;
+        //canvasAssignmentEvent also holds a reference to the assignment itself, we can use this as our main source.
         this.canvas_assignment = canvas_assignment.assignment;
         this.canvas_course_name = canvas_course;
     }
 
+    /**
+     * Returns the due date in "YYYY-MM-DDTHH:mm:SS-ms:ms" format. Priority is as follows:
+     * this.canvas_assignment.due_at > this.canvas_assignment.lock_at > this.canvas_general_infos.end_at
+     */
     get due_date(): Date {
         return new Date(
             //checks in order: Assignment due date, Assignment lock date,
             // Course Assignment due date, Course Assignment lock date
             this.canvas_assignment.due_at ||
-                this.canvas_assignment.lock_at ||
-                this.canvas_general_infos.end_at
+            this.canvas_assignment.lock_at ||
+            this.canvas_general_infos.end_at
         );
     }
     /** Returns short description of a canvas assignment with the specified format
+     *  priority of course name is as follows:
+     *  this.canvas_course_name > this.canvas_general_infos.context_name > "COURSE MISSING"
+     *  priority of assignment name is as follows:
+     *  this.canvas_assignment.name > this.canvas_general_infos.title > "Assignment missing"
+     *
+     *  assignment names are filtered to remove any words which are included in the course name. To aid this filter
+     *  process both the course and assignment names are converted to all lowercase.
+     *
      *  @returns: String of pattern [COURSE NAME CODE]: Assignment Name.
      * */
     get title(): string {
@@ -228,9 +279,10 @@ export class CanvasAssignmentWrapper {
      * a description.
      *
      * Description follows the format of:
-     * Assignment description listed on Canvas Calendar Tab
+     * Assignment description listed on Canvas Calendar Tab, priority of description as follows:
+     * this.canvas_general_infos.description > this.canvas_assignment.description > ""
      * \n
-     * Link to Assignment in the Canvas Assignments Tab.
+     * Link to Assignment in the Canvas Assignments Tab found in this.canvas_assignment.html_url
      *
      * If description is empty, should just return a link to the assignment on canvas.
      */
@@ -254,16 +306,30 @@ export class CanvasAssignmentWrapper {
         return desc
     }
 }
-
+/**
+ * The following class is a wrapper on the CanvasCalendarEvent designed to improve robustness in the scenario
+ * that a professor does not upload certain information about their event, as to avoid blank entries in calendars.
+ */
 export class CanvasEventWrapper {
     canvas_event: CanvasCalendarEvent;
     canvas_course_name: string;
 
+    /**
+     * Constructor for assignment wrapper
+     * @param canvas_course: the current name of the course, passed from previous API calls which gather
+     * all possible courses and their assignments. ex: course.getAssignments() we take course.toString() to assure
+     * there exists a name.
+     * @param canvas_assignment: a CanvasCalendarEvent interface from API calls. See declaration above.
+     */
     constructor(canvas_course:string, canvas_assignment: CanvasCalendarEvent) {
         this.canvas_event = canvas_assignment;
         this.canvas_course_name = canvas_course;
     }
 
+    /**
+     * Returns the start date of the event, if the event is marked as "all day" will begin right at the stroke of
+     * midnight 0-0-0-0 (the very beginning of the day). Follows "YYYY-MM-DDTHH:mm:SS-ms:ms" format.
+     */
     get start_date(): Date {
         //if this is an all day event lets set the start time to just after midnight, beginning of the day
         if(this.canvas_event.all_day){
@@ -276,6 +342,10 @@ export class CanvasEventWrapper {
         );
     }
 
+    /**
+     * Returns the start date of the event, if the event is marked as "all day" will end right before the stroke of
+     * midnight 23:59:59:999 (the very end of the day). Follows "YYYY-MM-DDTHH:mm:SS-ms:ms" format.
+     */
     get end_date(): Date {
         //if this event is an all day one lets send the end time to just before midnight, the end of the day
         if(this.canvas_event.all_day){
@@ -287,8 +357,18 @@ export class CanvasEventWrapper {
             this.canvas_event.end_at
         );
     }
-    /** Returns short description of a canvas assignment with the specified format
-     *  @returns: String of pattern [COURSE NAME CODE]: Assignment Name.
+    /** Returns short title of a canvas event with the specified format
+     *
+     *  Course name priority as follows:
+     *  this.canvas_course_name > this.canvas_event.context_name > "COURSE MISSING"
+     *
+     *  Course event name priority as follows:
+     *  this.canvas_event.title ? ""
+     *
+     *  In the scenario that the event name title is exactly the same as the course name (as is the case with lectures)
+     *  title() will not split up the two with a colon ":". If the names are different all words from the course
+     *  name will be filtered out of the event name so only new words are added past the colon ":".
+     *  @returns: String of pattern COURSE NAME CODE: Assignment Name.
      * */
     get title(): string {
         let desc = "";
@@ -309,9 +389,9 @@ export class CanvasEventWrapper {
             let comparison = desc.split(" ");
             desc += " : ";
             //to clean we split the assignment name by spaces, then only include words NOT in the course name
-             let cleaned_name = this.canvas_event.title.toLowerCase()
-                 .split(" ").filter(e => !comparison.includes(e)).join(" ")
-             desc += cleaned_name;
+            let cleaned_name = this.canvas_event.title.toLowerCase()
+                .split(" ").filter(e => !comparison.includes(e)).join(" ")
+            desc += cleaned_name;
         }
         return desc
     }
@@ -322,11 +402,12 @@ export class CanvasEventWrapper {
      * a description.
      *
      * Description follows the format of:
-     * Assignment description listed on Canvas Calendar Tab
+     * Assignment description listed on Canvas Calendar Tab using this.canvas_event.description
      * \n
-     * Link to Assignment in the Canvas Assignments Tab.
+     * Link to Assignment in the Canvas Assignments Tab. using this.canvas_event.html_url
      *
-     * If description is empty, should just return a link to the assignment on canvas.
+     * If description is empty, should just return a link to the assignment on canvas as this.canvas_event.html_url
+     * should never be null without extreme issues elsewhere.
      */
     get full_description(): string {
         let desc = "";
@@ -340,7 +421,11 @@ export class CanvasEventWrapper {
     }}
 
 
-
+/**
+ * The following interfaces are all mirrors of the Canvas API v1. The full descriptions of each interface
+ * along with examples and types may be found here.
+ * CanvasCourse: https://canvas.instructure.com/doc/api/courses.html
+ */
 export interface CanvasCourse {
     id: number;
     name: string;
@@ -374,9 +459,11 @@ export interface CanvasCourse {
     restrict_enrollments_to_course_dates: boolean;
     overridden_course_visibility: string;
 }
+//simple wrapper around the CanvasCourse.calendar object holding an ics file
 export interface CanvasCourseCalendar {
     ics: string;
 }
+//another simple wrapper around the CanvasCourse.enrollments optional field
 export interface CanvasEnrollmentsEntity {
     type: string;
     role: string;
@@ -401,10 +488,18 @@ export default class Canvas {
     private _courses: CanvasCourse[];
     private _user_id: number;
 
+    //takes a CanvasSAMLSession a wrapper around Session object which helps it authenticate Canvas if needed
     constructor() {
         this.session = new CanvasSAMLSession();
     }
 
+    /**
+     * Returns the userID used by canvas API to identify the specific user
+     *
+     * @returns: a promise containing a number when resolved, number is the userID, often part of the user_[VALUE]
+     * format used in API queries. [VALUE] is the returned number in this case.
+     * @requires: internet connection to make fetch() requests.
+     */
     async user_id(): Promise<number> {
         if (this._user_id === undefined) {
             const url = Canvas.API_URL + "/users/self?include=[id]";
@@ -417,37 +512,60 @@ export default class Canvas {
         return this._user_id;
     }
 
+    /**
+     * returns a list of courses the user has or is currently taking based on restrictions.
+     * Note: currently restricted to returning courses which have "started" on canvas in the last 13 weeks.
+     * As a result of this time restriction certain quarters may return the previous quarters courses as well in
+     * certian edge cases (such as short quarters which are only 11 weeks long.
+     *
+     * @returns: a promise that when evaluated contains a list of Course Objects defined by the interface above.
+     */
     async courses(): Promise<any[]> {
         if (this._courses === undefined) {
             const params = new URLSearchParams({
                 per_page: `${Number.MAX_SAFE_INTEGER}`,
             });
             const courses_url = `${Canvas.API_URL}/courses?${params}`;
+            let filter_date_13_weeks = new Date()
+            filter_date_13_weeks = new Date(filter_date_13_weeks.setDate(filter_date_13_weeks.getDate() - 91));
             const courses = await this.session
                 .get(courses_url)
                 .then((r) => r.json())
-                .then(courses => courses.filter(course => course.access_restricted_by_date !== true))
+                .then(courses => courses.filter(course => (course.access_restricted_by_date !== true
+                    && new Date(course.start_at) > filter_date_13_weeks)))
             this._courses = courses;
         }
         return this._courses;
     }
 
+    /**
+     * returns all map with course names as keys and all their Calendar EVENTs as a list for value
+     *
+     * @returns: a promise which when evaluated becomes a map of form <course name, course events []>
+     */
     async download_events(): Promise<Map<string, CanvasCalendarEvent[]>> {
         return this.download_calendar_events(CanvasEventType.EVENT);
     }
 
+    /**
+     * returns all map with course names as keys and all their Calendar ASSIGNMENTS as a list for value
+     *
+     * @returns: a promise which when evaluated becomes a map of form <course name, course assignments []>
+     */
     async download_assignments(): Promise<
-        Map<string, CanvasAssignmentEvent[]>
-    > {
+        Map<string, CanvasAssignmentEvent[]>> {
         return this.download_calendar_events(CanvasEventType.ASSIGNMENT);
     }
 
+    //will download calendar events of type CanvasEventType.EVENT or CanvasEventType.ASSIGNMENT.
     private async download_calendar_events(
         event_type: CanvasEventType
     ): Promise<Map<string, any[]>> {
         let events = new Map();
         let courses = await this.courses();
 
+        //will batch our events together to reduce the number of API calls made by each user. User it throttled
+        // on the google cloud end at a maximum of 600 (value can change) API calls per minute.
         await batch_await(
             courses,
             async (course) =>
@@ -461,6 +579,7 @@ export default class Canvas {
         return events;
     }
 
+    //downloads course events for a particular course ID. returns a list of course events with a given CanvasEventType.
     private async download_course_events(
         event_type: CanvasEventType,
         course_id: number
