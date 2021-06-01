@@ -54,7 +54,6 @@ test("CanvasSAML Session Authenticated Request", done => {
     const requestSpy = jest.spyOn(Session.prototype, "request")
         .mockImplementation((method: HTTPMethod, input: RequestInfo, init?: RequestInit) => {
             return new Promise<Response>((resolve, reject) => {
-                console.log("called!");
                 resolve(new Response(new Blob(), {
                     status: 200,
                     statusText: "OK"
@@ -121,7 +120,7 @@ const userCourses = [
         "name": "Class #1",
         "account_id": 1,
         "uuid": "oKpr9lt9BeEuIzo94qfafldUnOiUfDKwy4DyqYCL",
-        "start_at": "2018-09-26T19:51:29Z",
+        "start_at": String(Date()),
         "grading_standard_id": null,
         "is_public": false,
         "created_at": "2018-03-21T14:21:24Z",
@@ -148,7 +147,7 @@ const userCourses = [
         "name": "Class #2",
         "account_id": 1,
         "uuid": "i3WUJVkf58mKZTqF6yiytbSJP0IOizpVemeAEj4z",
-        "start_at": "2019-09-25T07:00:00Z",
+        "start_at": String(Date()),
         "grading_standard_id": null,
         "is_public": false,
         "created_at": "2019-03-27T14:31:27Z",
