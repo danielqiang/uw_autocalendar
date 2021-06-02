@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "test": "jest",
+    "test": "jest --group=local",
+    "test:all": "jest",
     "build": "rm -rf extension/js && tsc"
   },
   "devDependencies": {
@@ -8,7 +9,9 @@
     "jest": "^26.6.3",
     "prettier": "2.2.1",
     "ts-jest": "^26.5.6",
-    "typescript": "^4.2.4"
+    "typescript": "^4.2.4",
+    "isomorphic-fetch": "^3.0.0",
+    "jest-runner-groups": "^2.1.0"
   },
   "dependencies": {
     "@types/chrome": "^0.0.140"
