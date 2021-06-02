@@ -216,7 +216,7 @@ export class CanvasAssignmentWrapper {
     }
 
     /**
-     * Returns the due date in "YYYY-MM-DDTHH:mm:SS-ms:ms" format. Priority is as follows:
+     * Returns the due date in YYYY-MM-DDTHH:mm:ss.sssZ ISO 8601 extended format. Priority is as follows:
      * this.canvas_assignment.due_at > this.canvas_assignment.lock_at > this.canvas_general_infos.end_at
      */
     get due_date(): Date {
@@ -232,7 +232,7 @@ export class CanvasAssignmentWrapper {
      *  priority of course name is as follows:
      *  this.canvas_course_name > this.canvas_general_infos.context_name > "COURSE MISSING"
      *  priority of assignment name is as follows:
-     *  this.canvas_assignment.name > this.canvas_general_infos.title > "Assignment missing"
+     *  this.canvas_assignment.name > this.canvas_general_infos.title > "assignment name unknown"
      *
      *  assignment names are filtered to remove any words which are included in the course name. To aid this filter
      *  process both the course and assignment names are converted to all lowercase.
@@ -248,7 +248,6 @@ export class CanvasAssignmentWrapper {
         else if (this.canvas_general_infos.context_name){
             desc += this.canvas_general_infos.context_name.split(":")[0].split("-")[0].toLowerCase().trim();
         } else {
-            console.log("ERROR");
             desc += "COURSE MISSING";
         }
         let comparison = desc.split(" ");
@@ -267,8 +266,7 @@ export class CanvasAssignmentWrapper {
                 .split(" ").filter(e => !comparison.includes(e)).join(" ")
             desc += cleaned_name;
         } else {
-            console.log("ERROR");
-            desc += "Assignment Name Unknown";
+            desc += "assignment name unknown";
         }
         return desc
     }
@@ -328,7 +326,7 @@ export class CanvasEventWrapper {
 
     /**
      * Returns the start date of the event, if the event is marked as "all day" will begin right at the stroke of
-     * midnight 0-0-0-0 (the very beginning of the day). Follows "YYYY-MM-DDTHH:mm:SS-ms:ms" format.
+     * midnight 0-0-0-0 (the very beginning of the day). Follows YYYY-MM-DDTHH:mm:ss.sssZ ISO 8601 extended format.
      */
     get start_date(): Date {
         //if this is an all day event lets set the start time to just after midnight, beginning of the day
@@ -344,7 +342,7 @@ export class CanvasEventWrapper {
 
     /**
      * Returns the start date of the event, if the event is marked as "all day" will end right before the stroke of
-     * midnight 23:59:59:999 (the very end of the day). Follows "YYYY-MM-DDTHH:mm:SS-ms:ms" format.
+     * midnight 23:59:59.999 (the very end of the day). Follows YYYY-MM-DDTHH:mm:ss.sssZ ISO 8601 extended format.
      */
     get end_date(): Date {
         //if this event is an all day one lets send the end time to just before midnight, the end of the day
