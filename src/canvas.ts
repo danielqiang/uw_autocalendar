@@ -1,5 +1,5 @@
-import { HTTPMethod, Session } from "./session.js";
-import { batch_await } from "./utils.js";
+import { HTTPMethod, Session } from "./session";
+import { batch_await } from "./utils";
 
 export class CanvasSAMLSession extends Session {
     is_authenticating: boolean = false;
